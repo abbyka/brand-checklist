@@ -117,6 +117,33 @@
   .history-list{margin:6px 0 0 32px;font-size:11.5px;color:var(--ink-soft);}
   .history-list.hidden{display:none;}
 
+  .todo-section{padding:36px 20px 0;}
+  .todo-head{max-width:900px;margin:0 auto 16px;}
+  .todo-title{font-size:20px;font-weight:700;margin:2px 0 8px;}
+  .todo-sub{font-size:13px;color:var(--ink-soft);margin:0;}
+  .todo-columns{display:flex;gap:14px;flex-wrap:wrap;max-width:900px;margin:0 auto;}
+  .todo-col{flex:1 1 300px;min-width:260px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;}
+  .todo-col-name{width:100%;font-family:var(--font-cjk);font-weight:700;font-size:15px;color:var(--ink);border:none;border-bottom:1.5px dashed var(--card-border);background:transparent;padding:2px 0 8px;margin-bottom:10px;}
+  .todo-col-name:focus{outline:none;border-bottom-color:var(--accent);}
+  .todo-add-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .todo-add-text{flex:1 1 140px;font-family:var(--font-cjk);font-size:13px;padding:8px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--ink);}
+  .todo-add-date{font-family:var(--font-mono);font-size:12px;padding:8px 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--ink);}
+  .todo-add-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--header-bg);color:var(--header-ink);border:none;border-radius:8px;padding:8px 14px;cursor:pointer;}
+  .todo-add-btn:hover{opacity:.88;}
+  .todo-list{list-style:none;margin:0;padding:0;}
+  .todo-item{position:relative;display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-top:1px solid rgba(27,51,88,.07);}
+  .todo-item:first-child{border-top:none;}
+  .todo-chk{position:relative;top:2px;width:18px;height:18px;flex-shrink:0;accent-color:var(--accent);cursor:pointer;}
+  .todo-main{flex:1;min-width:0;}
+  .todo-text{font-size:13.8px;color:var(--ink);word-break:break-word;}
+  .todo-item.done .todo-text{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:rgba(27,51,88,.35);}
+  .todo-deadline{display:inline-block;margin-top:4px;font-family:var(--font-mono);font-size:10.8px;padding:2px 8px;border-radius:999px;background:rgba(51,88,125,.08);color:var(--line);}
+  .todo-deadline.tier-soon{color:var(--accent);font-weight:600;background:rgba(226,154,61,.14);}
+  .todo-deadline.tier-overdue{color:var(--danger);font-weight:700;background:rgba(179,64,46,.12);}
+  .todo-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
+  .todo-del:hover{color:var(--danger);}
+  .todo-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;}
+
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;animation:none !important;}
   }
@@ -133,6 +160,8 @@
     .chk,.box{width:22px;height:22px;}
     .task-row{padding-left:34px;}
     .recur-meta,.history-list{margin-left:34px;}
+    .todo-section{padding:24px 12px 0;}
+    .todo-col{padding:13px;min-width:0;}
   }
 </style>
 </head>
@@ -146,40 +175,52 @@
     </div>
     <div class="hero-inner">
       <p class="eyebrow">BRAND BUILD-OUT · 品牌行銷全案 · <span id="bizNameTag"></span></p>
-      <h1>由 0 到 100<br><span class="accent">自我檢查表</span></h1>
-      <p class="sub">一次性同要重複做嘅嘢而家合埋一齊剔。剔一次會記低今日日期;循環任務過咗週期會自動打返做「未剔」提你再做,一次性嘅剔咗就會一直留低。🔗 呢個係實時共享版:大家開嗰下睇緊、剔緊同一份,即時同步。⚠️ 冇登入機制,呢條link淨係應該分享俾你信任嘅人,唔好公開派街。</p>
-      <div class="progress-track"><div class="progress-fill" id="overallFill"></div></div>
-      <p class="progress-label" id="overallLabel">載入緊…</p>
-      <p class="today-nudge" id="todayNudge"></p>
-      <div class="filter-row" id="filterRow">
-        <button class="filter-btn active" data-filter="all" type="button">全部</button>
-        <button class="filter-btn" data-filter="due" type="button">而家要做</button>
-        <button class="filter-btn" data-filter="overdue" type="button">已過期</button>
-        <button class="filter-btn" data-filter="1" type="button">每日</button>
-        <button class="filter-btn" data-filter="3" type="button">每幾日</button>
-        <button class="filter-btn" data-filter="7" type="button">每星期</button>
-        <button class="filter-btn" data-filter="14" type="button">每兩星期</button>
-        <button class="filter-btn" data-filter="21" type="button">每3星期</button>
-        <button class="filter-btn" data-filter="30" type="button">每月</button>
-        <button class="filter-btn" data-filter="90" type="button">每幾個月</button>
-        <button class="filter-btn" data-filter="182" type="button">每半年</button>
-        <button class="filter-btn" data-filter="365" type="button">一年</button>
-      </div>
-      <div class="controls">
-        <button class="ctrl-btn" id="expandAllBtn" type="button">全部展開</button>
-        <button class="ctrl-btn" id="collapseAllBtn" type="button">全部收起</button>
-        <button class="ctrl-btn ctrl-btn--danger" id="resetBtn" type="button">重置進度</button>
-      </div>
-      <div class="reset-confirm hidden" id="resetConfirm">
-        <span>確定要清除所有已剔選同紀錄?呢個動作冇得還原。</span>
-        <button id="resetConfirmYes" type="button">確定清除</button>
-        <button id="resetConfirmNo" type="button">取消</button>
+      <h1 id="heroH1">由 0 到 100<br><span class="accent">自我檢查表</span></h1>
+      <p class="sub" id="heroSub">一次性同要重複做嘅嘢而家合埋一齊剔。剔一次會記低今日日期;循環任務過咗週期會自動打返做「未剔」提你再做,一次性嘅剔咗就會一直留低。🔗 呢個係實時共享版:大家開嗰下睇緊、剔緊同一份,即時同步。⚠️ 冇登入機制,呢條link淨係應該分享俾你信任嘅人,唔好公開派街。</p>
+      <div id="marketingOnly">
+        <div class="progress-track"><div class="progress-fill" id="overallFill"></div></div>
+        <p class="progress-label" id="overallLabel">載入緊…</p>
+        <p class="today-nudge" id="todayNudge"></p>
+        <div class="filter-row" id="filterRow">
+          <button class="filter-btn active" data-filter="all" type="button">全部</button>
+          <button class="filter-btn" data-filter="due" type="button">而家要做</button>
+          <button class="filter-btn" data-filter="overdue" type="button">已過期</button>
+          <button class="filter-btn" data-filter="1" type="button">每日</button>
+          <button class="filter-btn" data-filter="3" type="button">每幾日</button>
+          <button class="filter-btn" data-filter="7" type="button">每星期</button>
+          <button class="filter-btn" data-filter="14" type="button">每兩星期</button>
+          <button class="filter-btn" data-filter="21" type="button">每3星期</button>
+          <button class="filter-btn" data-filter="30" type="button">每月</button>
+          <button class="filter-btn" data-filter="90" type="button">每幾個月</button>
+          <button class="filter-btn" data-filter="182" type="button">每半年</button>
+          <button class="filter-btn" data-filter="365" type="button">一年</button>
+        </div>
+        <div class="controls">
+          <button class="ctrl-btn" id="expandAllBtn" type="button">全部展開</button>
+          <button class="ctrl-btn" id="collapseAllBtn" type="button">全部收起</button>
+          <button class="ctrl-btn ctrl-btn--danger" id="resetBtn" type="button">重置進度</button>
+        </div>
+        <div class="reset-confirm hidden" id="resetConfirm">
+          <span>確定要清除所有已剔選同紀錄?呢個動作冇得還原。</span>
+          <button id="resetConfirmYes" type="button">確定清除</button>
+          <button id="resetConfirmNo" type="button">取消</button>
+        </div>
       </div>
     </div>
   </header>
 
   <main class="categories" id="categories"></main>
-  <p class="foot">剔嘅嘢自動save落你個account,唔會同人分享。跟住個頻率持續做,個 marketing engine 就會一直運轉落去。</p>
+
+  <section class="todo-section" id="todoSection">
+    <div class="todo-head">
+      <p class="eyebrow eyebrow-dark">CUSTOM · 自訂 To-Do List</p>
+      <h2 class="todo-title">兩個人嘅共用清單</h2>
+      <p class="todo-sub">自己打字加task,填deadline;過期會著色提你。</p>
+    </div>
+    <div class="todo-columns" id="todoColumns"></div>
+  </section>
+
+  <p class="foot">呢版嘅剔選記錄實時共享,自動save落雲端資料庫。跟住個頻率持續做,個 marketing engine 就會一直運轉落去。</p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -284,7 +325,8 @@
       {id:'F6',t:'監察熱門話題/hashtag 趨勢',f:'每週 check',d:7},
       {id:'F7',t:'經營 FB 社團/Discord/Telegram 社群',f:'每日輕度互動',d:1},
       {id:'F8',t:'主動回覆潛在客戶查詢',f:'每日',d:1},
-      {id:'F9',t:'邀請顧客留 IG/FB 評論(DM 跟進)',f:'每週 1 次',d:7}
+      {id:'F9',t:'邀請顧客留 IG/FB 評論(DM 跟進)',f:'每週 1 次',d:7},
+      {id:'F10',t:'主動 follow/互動目標客群相關帳號(IG/小紅書等)',f:'跟住排程,建議每幾日一輪',d:3}
     ]},
     {code:'G', title:'KOL / 網紅合作', items:[
       {id:'G1',t:'搵合作對象名單',f:'持續更新,每季擴充',d:90},
@@ -369,8 +411,8 @@
     ]}
   ];
 
-  var SUPABASE_URL = 'https://umbpnhbnyjgqmoilxbfu.supabase.co';
-  var SUPABASE_ANON_KEY = 'sb_publishable_l2VM6-NBoj3q6KbakOsB9A_iIyoUu4-';
+  var SUPABASE_URL = 'PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
+  var SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
   var sbClient = null;
   var sbChannel = null;
 
@@ -379,7 +421,8 @@
     {id:'jewelry', name:'珠寶'},
     {id:'engineering', name:'工程'},
     {id:'finance', name:'財務'},
-    {id:'ai_marketing', name:'AI marketing'}
+    {id:'ai_marketing', name:'AI marketing'},
+    {id:'todo_list', name:'To Do List'}
   ];
 
   function getBusinessFromURL(){
@@ -725,6 +768,231 @@
   buildDOM();
   renderAll();
 
+  var TODO_SLOTS = ['p1','p2'];
+  var customTodos = {p1:[], p2:[]};
+  var todoNames = {p1:'', p2:''};
+  var todoChannel = null;
+  var todoColumnsEl = document.getElementById('todoColumns');
+  buildTodoColumns();
+
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function genTodoId(){
+    return 'todo_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  }
+  function todoTier(item){
+    if(item.done) return 'done';
+    if(!item.deadline) return 'none';
+    var days = daysBetween(todayISO(), item.deadline);
+    if(days < 0) return 'overdue';
+    if(days <= 2) return 'soon';
+    return 'ok';
+  }
+  function todoDeadlineText(item){
+    if(!item.deadline) return '';
+    var days = daysBetween(todayISO(), item.deadline);
+    var label = niceDate(item.deadline);
+    if(item.done) return '死線: ' + label;
+    if(days < 0) return '已過期 ' + (-days) + ' 日 · 死線: ' + label;
+    if(days === 0) return '死線: ' + label + '(今日!)';
+    return '死線: ' + label + '(仲有 ' + days + ' 日)';
+  }
+
+  function buildTodoColumns(){
+    todoColumnsEl.innerHTML = '';
+    TODO_SLOTS.forEach(function(slot){
+      var col = document.createElement('div');
+      col.className = 'todo-col';
+      col.dataset.slot = slot;
+
+      var nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.className = 'todo-col-name';
+      nameInput.placeholder = '撳呢度打你個名';
+      col.appendChild(nameInput);
+
+      var addRow = document.createElement('div');
+      addRow.className = 'todo-add-row';
+      addRow.innerHTML =
+        '<input type="text" class="todo-add-text" placeholder="打新task…">' +
+        '<input type="date" class="todo-add-date">' +
+        '<button type="button" class="todo-add-btn">+ 加</button>';
+      col.appendChild(addRow);
+
+      var listEl = document.createElement('ul');
+      listEl.className = 'todo-list';
+      col.appendChild(listEl);
+
+      todoColumnsEl.appendChild(col);
+
+      nameInput.addEventListener('change', function(){ saveTodoName(slot, nameInput.value); });
+
+      var addBtn = addRow.querySelector('.todo-add-btn');
+      var textInput = addRow.querySelector('.todo-add-text');
+      var dateInput = addRow.querySelector('.todo-add-date');
+      addBtn.addEventListener('click', function(){
+        var text = textInput.value.trim();
+        if(!text) return;
+        addTodoItem(slot, text, dateInput.value || null);
+        textInput.value = '';
+        dateInput.value = '';
+      });
+      textInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ addBtn.click(); }
+      });
+    });
+  }
+
+  function renderTodoColumn(slot){
+    var col = todoColumnsEl.querySelector('.todo-col[data-slot="'+slot+'"]');
+    if(!col) return;
+    var nameInput = col.querySelector('.todo-col-name');
+    if(document.activeElement !== nameInput){ nameInput.value = todoNames[slot] || ''; }
+    var listEl = col.querySelector('.todo-list');
+    listEl.innerHTML = '';
+    var items = (customTodos[slot] || []).slice().sort(function(a,b){
+      if(!!a.done !== !!b.done) return a.done ? 1 : -1;
+      if(a.deadline && b.deadline) return a.deadline < b.deadline ? -1 : 1;
+      if(a.deadline) return -1;
+      if(b.deadline) return 1;
+      return 0;
+    });
+    if(!items.length){
+      var empty = document.createElement('li');
+      empty.className = 'todo-empty';
+      empty.textContent = '仲未有task,打字加一個。';
+      listEl.appendChild(empty);
+      return;
+    }
+    items.forEach(function(item){
+      var li = document.createElement('li');
+      li.className = 'todo-item' + (item.done ? ' done' : '');
+      li.dataset.id = item.id;
+      var tier = todoTier(item);
+      var deadlineHtml = item.deadline ? ('<span class="todo-deadline' + (tier==='soon'?' tier-soon':tier==='overdue'?' tier-overdue':'') + '">' + todoDeadlineText(item) + '</span>') : '';
+      li.innerHTML =
+        '<input type="checkbox" class="todo-chk"' + (item.done?' checked':'') + '>' +
+        '<span class="todo-main"><span class="todo-text">' + escapeHtml(item.task) + '</span><br>' + deadlineHtml + '</span>' +
+        '<button type="button" class="todo-del" title="刪除">✕</button>';
+      listEl.appendChild(li);
+
+      li.querySelector('.todo-chk').addEventListener('change', function(e){
+        toggleTodoItem(slot, item.id, e.target.checked);
+      });
+      li.querySelector('.todo-del').addEventListener('click', function(){
+        deleteTodoItem(slot, item.id);
+      });
+    });
+  }
+
+  function renderAllTodos(){
+    TODO_SLOTS.forEach(function(slot){ renderTodoColumn(slot); });
+  }
+
+  function addTodoItem(slot, text, deadline){
+    var item = {id: genTodoId(), task:text, deadline: deadline || null, done:false};
+    customTodos[slot] = customTodos[slot] || [];
+    customTodos[slot].push(item);
+    renderTodoColumn(slot);
+    if(sbClient){
+      sbClient.from('custom_todos').insert({
+        id:item.id, business_id: currentBusiness, slot:slot, task:text, deadline:item.deadline, done:false
+      }).then(function(res){ if(res && res.error){ console.error('todo insert error', res.error); } });
+    }
+  }
+
+  function toggleTodoItem(slot, id, done){
+    var arr = customTodos[slot] || [];
+    var item = arr.filter(function(x){ return x.id === id; })[0];
+    if(item){ item.done = done; }
+    renderTodoColumn(slot);
+    if(sbClient){
+      sbClient.from('custom_todos').update({done:done}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('todo update error', res.error); }
+      });
+    }
+  }
+
+  function deleteTodoItem(slot, id){
+    customTodos[slot] = (customTodos[slot]||[]).filter(function(x){ return x.id !== id; });
+    renderTodoColumn(slot);
+    if(sbClient){
+      sbClient.from('custom_todos').delete().eq('id', id).eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('todo delete error', res.error); }
+      });
+    }
+  }
+
+  function saveTodoName(slot, name){
+    todoNames[slot] = name;
+    if(sbClient){
+      sbClient.from('todo_people').upsert({business_id: currentBusiness, slot:slot, name:name}).then(function(res){
+        if(res && res.error){ console.error('todo name save error', res.error); }
+      });
+    }
+  }
+
+  function applyTodoRowChange(payload){
+    var row = (payload.new && Object.keys(payload.new).length) ? payload.new : payload.old;
+    if(!row || !row.slot) return;
+    var slot = row.slot;
+    customTodos[slot] = customTodos[slot] || [];
+    if(payload.eventType === 'DELETE'){
+      customTodos[slot] = customTodos[slot].filter(function(x){ return x.id !== row.id; });
+    } else {
+      var idx = customTodos[slot].findIndex(function(x){ return x.id === row.id; });
+      var newItem = {id: row.id, task: row.task, deadline: row.deadline, done: !!row.done};
+      if(idx === -1){ customTodos[slot].push(newItem); } else { customTodos[slot][idx] = newItem; }
+    }
+    renderTodoColumn(slot);
+  }
+
+  function subscribeTodoRealtime(){
+    if(!sbClient) return;
+    if(todoChannel){ sbClient.removeChannel(todoChannel); todoChannel = null; }
+    todoChannel = sbClient
+      .channel('todo-changes-' + currentBusiness)
+      .on('postgres_changes', {
+        event:'*', schema:'public', table:'custom_todos',
+        filter:'business_id=eq.' + currentBusiness
+      }, function(payload){ applyTodoRowChange(payload); })
+      .on('postgres_changes', {
+        event:'*', schema:'public', table:'todo_people',
+        filter:'business_id=eq.' + currentBusiness
+      }, function(payload){
+        if(payload.new && payload.new.slot){
+          todoNames[payload.new.slot] = payload.new.name || '';
+          renderTodoColumn(payload.new.slot);
+        }
+      })
+      .subscribe();
+  }
+
+  function loadTodoData(){
+    if(!sbClient){ renderAllTodos(); return; }
+    customTodos = {p1:[], p2:[]};
+    todoNames = {p1:'', p2:''};
+    sbClient.from('custom_todos').select('*').eq('business_id', currentBusiness).then(function(res){
+      if(res && res.data){
+        res.data.forEach(function(row){
+          customTodos[row.slot] = customTodos[row.slot] || [];
+          customTodos[row.slot].push({id:row.id, task:row.task, deadline:row.deadline, done:!!row.done});
+        });
+      }
+      renderAllTodos();
+    });
+    sbClient.from('todo_people').select('*').eq('business_id', currentBusiness).then(function(res){
+      if(res && res.data){
+        res.data.forEach(function(row){ todoNames[row.slot] = row.name || ''; });
+      }
+      renderAllTodos();
+    });
+    subscribeTodoRealtime();
+  }
+
   function applyRowToState(row){
     if(!row || !row.task_id || row.business_id !== currentBusiness) return;
     historyState[row.task_id] = { history: row.history || [] };
@@ -757,7 +1025,7 @@
   }
 
   function loadBusinessData(){
-    if(!sbClient){ renderAll(); return; }
+    if(!sbClient){ renderAll(); renderAllTodos(); return; }
     sbClient.from('checklist_state').select('*').eq('business_id', currentBusiness).then(function(res){
       historyState = {};
       if(res && res.data){
@@ -768,6 +1036,25 @@
       renderAll();
     });
     subscribeRealtimeForBusiness();
+    loadTodoData();
+  }
+
+  var MARKETING_H1 = '由 0 到 100<br><span class="accent">自我檢查表</span>';
+  var MARKETING_SUB = '一次性同要重複做嘅嘢而家合埋一齊剔。剔一次會記低今日日期;循環任務過咗週期會自動打返做「未剔」提你再做,一次性嘅剔咗就會一直留低。🔗 呢個係實時共享版:大家開嗰下睇緊、剔緊同一份,即時同步。⚠️ 冇登入機制,呢條link淨係應該分享俾你信任嘅人,唔好公開派街。';
+  var TODO_H1 = '共用<br><span class="accent">To-Do List</span>';
+  var TODO_SUB = '兩個人自己打字加task,填deadline;過期會變色提你(過期紅色、就快到期橙色)。';
+
+  function updateViewForBusiness(id){
+    var isTodoBiz = (id === 'todo_list');
+    var marketingOnlyEl = document.getElementById('marketingOnly');
+    var todoSectionEl = document.getElementById('todoSection');
+    var h1El = document.getElementById('heroH1');
+    var subEl = document.getElementById('heroSub');
+    if(marketingOnlyEl) marketingOnlyEl.style.display = isTodoBiz ? 'none' : '';
+    if(categoriesEl) categoriesEl.style.display = isTodoBiz ? 'none' : '';
+    if(todoSectionEl) todoSectionEl.style.display = isTodoBiz ? '' : 'none';
+    if(h1El) h1El.innerHTML = isTodoBiz ? TODO_H1 : MARKETING_H1;
+    if(subEl) subEl.innerHTML = isTodoBiz ? TODO_SUB : MARKETING_SUB;
   }
 
   function setBusiness(id){
@@ -781,6 +1068,7 @@
     }catch(e){}
     var tagEl = document.getElementById('bizNameTag');
     if(tagEl) tagEl.textContent = businessName(id);
+    updateViewForBusiness(id);
     filterMode = 'all';
     filterRowEl.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
     var allBtn = filterRowEl.querySelector('[data-filter="all"]');
@@ -800,6 +1088,7 @@
   });
   bizSelectEl.value = currentBusiness;
   document.getElementById('bizNameTag').textContent = businessName(currentBusiness);
+  updateViewForBusiness(currentBusiness);
   bizSelectEl.addEventListener('change', function(){ setBusiness(this.value); });
 
   (function initSupabase(){
