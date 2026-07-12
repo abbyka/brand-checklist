@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>品牌行銷 0→100 自我檢查表</title>
+<style>
+  :root{
+    --bg:#EEF2F1;
+    --bg-grid: rgba(51,88,125,0.07);
+    --ink:#1B3358;
+    --ink-soft:#5B6B7C;
+    --line:#33587D;
+    --accent:#E29A3D;
+    --danger:#B3402E;
+    --header-bg:#122238;
+    --header-ink:#EAF3F7;
+    --header-ink-dim:rgba(234,243,247,0.62);
+    --card-bg:#FFFFFF;
+    --card-border:rgba(27,51,88,0.13);
+    --radius:12px;
+    --font-cjk:"PingFang HK","Microsoft JhengHei","Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-mono: ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 34px);
+    color:var(--ink);
+    font-family:var(--font-cjk);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .ruler{height:6px;background:repeating-linear-gradient(90deg, var(--accent) 0 1px, transparent 1px 13px);opacity:.55;}
+  .app{max-width:900px;margin:0 auto;padding-bottom:72px;}
+
+  .hero{background:var(--header-bg);color:var(--header-ink);padding:36px 22px 30px;position:relative;overflow:hidden;}
+  .hero:before,.hero:after{content:'+';position:absolute;font-family:var(--font-mono);font-size:14px;color:var(--header-ink-dim);opacity:.5;}
+  .hero:before{top:14px;left:16px;}
+  .hero:after{bottom:14px;right:16px;}
+  .biz-switcher{position:absolute;top:18px;right:20px;z-index:2;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+  .biz-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--header-ink-dim);}
+  .biz-switcher select{font-family:var(--font-mono);font-size:12.5px;background:rgba(234,243,247,.1);color:var(--header-ink);border:1px solid rgba(234,243,247,.35);border-radius:8px;padding:6px 10px;cursor:pointer;}
+  .biz-switcher select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  #bizNameTag{color:var(--accent);font-weight:700;}
+  .hero-inner{max-width:760px;margin:0 auto;position:relative;z-index:1;}
+  .eyebrow{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--header-ink-dim);margin:0 0 14px;}
+  h1{font-size:clamp(26px,5vw,38px);line-height:1.2;margin:0 0 8px;font-weight:700;letter-spacing:-.01em;}
+  h1 .accent{color:var(--accent);}
+  .sub{color:var(--header-ink-dim);margin:0 0 22px;font-size:13.5px;}
+
+  .progress-track{position:relative;height:12px;border-radius:999px;background:rgba(234,243,247,0.14);overflow:hidden;
+    background-image:repeating-linear-gradient(90deg, rgba(234,243,247,0.22) 0 1px, transparent 1px calc(10% - 1px));
+  }
+  .progress-fill{height:100%;width:0%;background:var(--accent);border-radius:999px;transition:width .4s ease;}
+  .progress-label{font-family:var(--font-mono);font-size:12.5px;color:var(--header-ink-dim);margin-top:10px;}
+  .progress-label b{color:var(--header-ink);font-weight:600;}
+
+  .today-nudge{font-size:13px;margin:12px 0 0;padding:9px 13px;border-radius:8px;background:rgba(226,154,61,.16);color:var(--accent);border:1px solid rgba(226,154,61,.4);display:none;}
+  .today-nudge.show{display:block;}
+  .filter-row{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
+  .filter-btn{font-family:var(--font-mono);font-size:12px;background:rgba(234,243,247,.08);border:1px solid rgba(234,243,247,.32);color:var(--header-ink-dim);padding:8px 15px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s;}
+  .filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--header-bg);font-weight:700;}
+  .filter-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .controls{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .ctrl-btn{font-family:var(--font-mono);font-size:12px;background:transparent;border:1px solid rgba(234,243,247,.32);color:var(--header-ink);padding:8px 15px;border-radius:999px;cursor:pointer;transition:background .15s;}
+  .ctrl-btn:hover{background:rgba(234,243,247,.12);}
+  .ctrl-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .ctrl-btn--danger{border-color:rgba(226,154,61,.55);color:var(--accent);}
+
+  .reset-confirm{margin-top:14px;font-size:12.5px;background:rgba(226,154,61,.14);border:1px solid rgba(226,154,61,.45);padding:11px 15px;border-radius:8px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .reset-confirm.hidden{display:none;}
+  .reset-confirm button{font-family:var(--font-mono);font-size:12px;padding:6px 13px;border-radius:999px;border:1px solid currentColor;background:transparent;cursor:pointer;}
+  #resetConfirmYes{color:var(--accent);}
+  #resetConfirmNo{color:var(--header-ink-dim);}
+
+
+  .categories{padding:22px 20px 0;}
+
+  .cat{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:13px;}
+  .cat.filtered-empty{display:none;}
+  .cat-head{display:flex;align-items:center;gap:13px;padding:15px 17px;cursor:pointer;user-select:none;}
+  .cat-code{font-family:var(--font-mono);font-weight:700;font-size:12.5px;width:27px;height:27px;border:1.5px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--line);flex-shrink:0;}
+  .cat-titlewrap{flex:1;min-width:0;}
+  .cat-title{font-weight:600;font-size:14.5px;margin:0 0 6px;}
+  .cat-bar-mini{height:4px;background:rgba(27,51,88,.08);border-radius:999px;overflow:hidden;}
+  .cat-bar-mini-fill{height:100%;background:var(--accent);width:0%;transition:width .3s ease;}
+  .cat-frac{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);white-space:nowrap;flex-shrink:0;}
+  .cat-chevron{flex-shrink:0;transition:transform .2s ease;color:var(--ink-soft);}
+  .cat.expanded .cat-chevron{transform:rotate(90deg);}
+
+  .cat-body{display:none;padding:2px 17px 15px;}
+  .cat.expanded .cat-body{display:block;}
+
+  .task-item{padding:10px 0;border-top:1px solid rgba(27,51,88,.07);}
+  .task-item:first-of-type{border-top:none;}
+  .task-item.filtered-hide{display:none;}
+  .task-row{position:relative;display:block;padding:0 0 0 32px;cursor:pointer;}
+  .chk{position:absolute;left:0;top:1px;width:20px;height:20px;opacity:0;margin:0;cursor:pointer;z-index:2;}
+  .box{position:absolute;left:0;top:1px;width:20px;height:20px;border:1.5px solid var(--line);border-radius:5px;background:#fff;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:background .15s,border-color .15s;}
+  .box svg{width:12px;height:12px;color:var(--header-bg);opacity:0;transform:scale(.5);transition:opacity .15s,transform .18s cubic-bezier(.34,1.56,.64,1);}
+  .chk:checked + .box{background:var(--accent);border-color:var(--accent);}
+  .chk:checked + .box svg{opacity:1;transform:scale(1);}
+  .chk:focus-visible + .box{outline:2px solid var(--accent);outline-offset:2px;}
+  .task-text{font-size:13.8px;color:var(--ink);transition:color .15s;}
+  .chk:checked ~ .task-text{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:rgba(27,51,88,.35);}
+  .freq-pill{display:inline-block;margin-left:8px;font-family:var(--font-mono);font-size:10.8px;color:var(--line);background:rgba(51,88,125,.08);padding:2px 8px;border-radius:999px;white-space:nowrap;vertical-align:middle;}
+
+  .recur-meta{margin:6px 0 0 32px;font-family:var(--font-mono);font-size:11.3px;color:var(--ink-soft);display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .recur-meta [data-meta].tier-soon{color:var(--accent);font-weight:600;}
+  .recur-meta [data-meta].tier-overdue{color:var(--danger);font-weight:700;}
+  .history-link{background:none;border:none;padding:0;font-family:var(--font-mono);font-size:11px;color:var(--line);text-decoration:underline;cursor:pointer;}
+  .history-list{margin:6px 0 0 32px;font-size:11.5px;color:var(--ink-soft);}
+  .history-list.hidden{display:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+
+  .foot{text-align:center;color:var(--ink-soft);font-size:12px;padding:26px 20px 0;}
+
+  @media (max-width:480px){
+    .hero{padding:28px 16px 24px;}
+    .categories{padding:16px 12px 0;}
+    .cat-head{padding:13px 14px;}
+    .filter-btn{font-size:11px;padding:7px 12px;}
+    .ctrl-btn{font-size:11px;padding:7px 12px;}
+    .task-item{padding:11px 0;}
+    .chk,.box{width:22px;height:22px;}
+    .task-row{padding-left:34px;}
+    .recur-meta,.history-list{margin-left:34px;}
+  }
+</style>
+</head>
+<body>
+<div class="ruler"></div>
+<div class="app">
+  <header class="hero">
+    <div class="biz-switcher">
+      <label for="bizSelect" class="biz-label">BUSINESS</label>
+      <select id="bizSelect"></select>
+    </div>
+    <div class="hero-inner">
+      <p class="eyebrow">BRAND BUILD-OUT · 品牌行銷全案 · <span id="bizNameTag"></span></p>
+      <h1>由 0 到 100<br><span class="accent">自我檢查表</span></h1>
+      <p class="sub">一次性同要重複做嘅嘢而家合埋一齊剔。剔一次會記低今日日期;循環任務過咗週期會自動打返做「未剔」提你再做,一次性嘅剔咗就會一直留低。🔗 呢個係實時共享版:大家開嗰下睇緊、剔緊同一份,即時同步。⚠️ 冇登入機制,呢條link淨係應該分享俾你信任嘅人,唔好公開派街。</p>
+      <div class="progress-track"><div class="progress-fill" id="overallFill"></div></div>
+      <p class="progress-label" id="overallLabel">載入緊…</p>
+      <p class="today-nudge" id="todayNudge"></p>
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn active" data-filter="all" type="button">全部</button>
+        <button class="filter-btn" data-filter="due" type="button">而家要做</button>
+        <button class="filter-btn" data-filter="overdue" type="button">已過期</button>
+        <button class="filter-btn" data-filter="1" type="button">每日</button>
+        <button class="filter-btn" data-filter="3" type="button">每幾日</button>
+        <button class="filter-btn" data-filter="7" type="button">每星期</button>
+        <button class="filter-btn" data-filter="14" type="button">每兩星期</button>
+        <button class="filter-btn" data-filter="21" type="button">每3星期</button>
+        <button class="filter-btn" data-filter="30" type="button">每月</button>
+        <button class="filter-btn" data-filter="90" type="button">每幾個月</button>
+        <button class="filter-btn" data-filter="182" type="button">每半年</button>
+        <button class="filter-btn" data-filter="365" type="button">一年</button>
+      </div>
+      <div class="controls">
+        <button class="ctrl-btn" id="expandAllBtn" type="button">全部展開</button>
+        <button class="ctrl-btn" id="collapseAllBtn" type="button">全部收起</button>
+        <button class="ctrl-btn ctrl-btn--danger" id="resetBtn" type="button">重置進度</button>
+      </div>
+      <div class="reset-confirm hidden" id="resetConfirm">
+        <span>確定要清除所有已剔選同紀錄?呢個動作冇得還原。</span>
+        <button id="resetConfirmYes" type="button">確定清除</button>
+        <button id="resetConfirmNo" type="button">取消</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="categories" id="categories"></main>
+  <p class="foot">剔嘅嘢自動save落你個account,唔會同人分享。跟住個頻率持續做,個 marketing engine 就會一直運轉落去。</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  var DATA = [
+    {code:'A', title:'品牌 / Marketing 策略', items:[
+      {id:'A1',t:'定義目標客群 persona',f:'一次性(每年 review)',d:365},
+      {id:'A2',t:'做競爭對手分析',f:'起步一次,之後每季 review',d:90},
+      {id:'A3',t:'寫 USP / 定位聲明',f:'一次性(大轉型先改)',d:null},
+      {id:'A4',t:'寫 brand story',f:'一次性',d:null},
+      {id:'A5',t:'定 tone of voice 文件',f:'一次性,每年 review',d:365},
+      {id:'A6',t:'度品牌 slogan / tagline',f:'一次性',d:null},
+      {id:'A7',t:'做市場調查(問卷/訪談)',f:'每半年 1 次',d:182},
+      {id:'A8',t:'定季度/年度 marketing 目標',f:'每季 + 每年',d:90},
+      {id:'A9',t:'品牌健康度/認知度調查',f:'每年 1 次',d:365},
+      {id:'A10',t:'建立競爭對手 social/ads 監察',f:'每月 check',d:30},
+      {id:'A11',t:'Marketing 預算規劃同渠道分配',f:'每季/每年',d:90},
+      {id:'A12',t:'年度大型購物節/節慶行銷日曆規劃',f:'每年 1 次',d:365}
+    ]},
+    {code:'B', title:'網站 Marketing(SEO / AEO / UI / UX)', items:[
+      {id:'B1',t:'Keyword research',f:'起步一次,每季更新',d:90},
+      {id:'B2',t:'寫晒每頁 title tag + meta description',f:'一次性(每個新頁面)',d:null},
+      {id:'B3',t:'開清單:blog/內容題目',f:'每季更新',d:90},
+      {id:'B4',t:'寫 blog 文章',f:'每週 1-2 篇;最少每月 2-4 篇',d:7},
+      {id:'B5',t:'更新/refresh 舊 blog 文章',f:'常青內容 6-12 個月;競爭題目 3-6 個月',d:182},
+      {id:'B6',t:'建 FAQ 頁面內容',f:'一次性起步,持續加',d:null},
+      {id:'B7',t:'申請 Google Search Console + 提交 sitemap',f:'一次性',d:null},
+      {id:'B8',t:'設置 Google Analytics 4',f:'一次性',d:null},
+      {id:'B9',t:'設置 Meta Pixel',f:'一次性',d:null},
+      {id:'B10',t:'設置 Google Tag Manager',f:'一次性',d:null},
+      {id:'B11',t:'Backlink outreach',f:'持續,建議每月一輪',d:30},
+      {id:'B12',t:'寫 landing page 文案',f:'每次新產品/campaign',d:null},
+      {id:'B13',t:'寫 CTA 文案',f:'跟住頁面更新',d:null},
+      {id:'B14',t:'加客戶評價/case study上網站',f:'持續進行',d:null},
+      {id:'B15',t:'網站速度/Core Web Vitals 檢查',f:'每季 1 次',d:90},
+      {id:'B16',t:'網站 security/SSL/backup 檢查',f:'每月 1 次',d:30},
+      {id:'B17',t:'網站 CRO(轉換率優化)A/B 測試',f:'持續,每個測試跑 2-4 星期',d:21},
+      {id:'B18',t:'網站無障礙(Accessibility)檢查',f:'每年 1 次',d:365},
+      {id:'B19',t:'Heatmap/用戶行為分析設置',f:'設置一次,每季睇數據',d:90},
+      {id:'B20',t:'Domain/SSL 續期提醒',f:'每年(到期前 1 個月)',d:365},
+      {id:'B21',t:'加 Schema Markup(FAQ/Product/LocalBusiness/Review)',f:'一次性設置,新頁面持續加',d:null},
+      {id:'B22',t:'內容用「直接答案」開頭寫法(AEO)',f:'每篇內容都要做',d:null},
+      {id:'B23',t:'網站/社交/第三方資訊一致性檢查(AEO)',f:'每季 1 次',d:90},
+      {id:'B24',t:'建立/更新 llms.txt(AEO 新興做法)',f:'一次性,每季 review',d:90},
+      {id:'B25',t:'追蹤品牌被 AI(ChatGPT/Perplexity/AI Overview)引用情況',f:'每月 check',d:30},
+      {id:'B26',t:'定色系(主色/輔色/CTA強調色)',f:'一次性',d:null},
+      {id:'B27',t:'定字體系統(標題+內文)',f:'一次性',d:null},
+      {id:'B28',t:'CTA 按鈕設計(顏色/動詞文案)',f:'一次性,新頁面跟住做',d:null},
+      {id:'B29',t:'Mobile-first 版面設計',f:'一次性',d:null},
+      {id:'B30',t:'導航列結構設計',f:'一次性',d:null},
+      {id:'B31',t:'首屏 3 秒訊息設計',f:'每個 landing page',d:null},
+      {id:'B32',t:'轉換漏斗/落單流程簡化',f:'一次性,每季 review 流失率',d:90},
+      {id:'B33',t:'表單欄位精簡',f:'一次性',d:null},
+      {id:'B34',t:'信任元素擺放(評價/認證/媒體 logo)',f:'一次性,持續更新內容',d:null},
+      {id:'B35',t:'邀請顧客喺網站/其他平台留評價(Trustpilot/行業平台,視乎你市場)',f:'每週 1 次',d:7}
+    ]},
+    {code:'C', title:'Google / 地圖 / 本地商戶上架', items:[
+      {id:'C1',t:'註冊 Google Business Profile',f:'一次性',d:null},
+      {id:'C2',t:'完成商家認證',f:'一次性',d:null},
+      {id:'C3',t:'填晒營業資訊(地址/電話/時間)',f:'一次性,變動即更新',d:null},
+      {id:'C4',t:'上傳店舖/產品相片',f:'起步多張,之後每月加新相',d:30},
+      {id:'C5',t:'寫 Google Posts 文案並定期出',f:'每週 1-3 次',d:7},
+      {id:'C6',t:'邀請顧客留 Google 評論',f:'每週 1 次',d:7},
+      {id:'C7',t:'回覆所有評論',f:'收到後 24-48 小時內',d:1},
+      {id:'C8',t:'服務/產品 listing 檢查更新',f:'每季 1 次',d:90},
+      {id:'C9',t:'完整 Profile audit',f:'每半年 1 次',d:182},
+      {id:'C10',t:'註冊 Apple Maps Connect',f:'一次性',d:null},
+      {id:'C11',t:'註冊 Bing Places',f:'一次性',d:null},
+      {id:'C12',t:'登記行業相關平台(OpenRice/Yelp等)',f:'一次性',d:null},
+      {id:'C13',t:'監察 GBP Insights(搜尋/點擊/導航次數)',f:'每月 check',d:30}
+    ]},
+    {code:'D', title:'社交媒體帳號設置', items:[
+      {id:'D1',t:'揀定主打平台(IG/FB/TikTok/小紅書/YouTube/LinkedIn)',f:'一次性,每年 review',d:null},
+      {id:'D2',t:'開晒所有帳號',f:'一次性',d:null},
+      {id:'D3',t:'寫 bio(每個平台)',f:'一次性,調整時更新',d:null},
+      {id:'D4',t:'整 profile picture/封面圖',f:'一次性',d:null},
+      {id:'D5',t:'設置 link in bio(Linktree/Beacons)',f:'一次性設置,持續更新連結',d:null},
+      {id:'D6',t:'開設 YouTube 頻道 + 版面設計',f:'一次性',d:null},
+      {id:'D7',t:'開設官方 WhatsApp Business 帳號',f:'一次性',d:null},
+      {id:'D8',t:'開設 FB 社團/Discord/Telegram 社群',f:'一次性',d:null}
+    ]},
+    {code:'E', title:'社交媒體內容製作', items:[
+      {id:'E1',t:'定 content pillar(3-5 條主題)',f:'一次性,每半年 review',d:182},
+      {id:'E2',t:'整 content calendar',f:'每月排一次,每週微調',d:30},
+      {id:'E3',t:'寫 captions',f:'跟住排程頻率',d:3},
+      {id:'E4',t:'度短片 hook 同腳本',f:'跟住拍片頻率',d:3},
+      {id:'E5',t:'拍攝短片(IG/TikTok Reels)',f:'每週 2-5 條',d:7},
+      {id:'E6',t:'剪片',f:'跟住拍攝量',d:3},
+      {id:'E7',t:'拍/整圖片素材',f:'跟住排程',d:3},
+      {id:'E8',t:'整 Canva template 庫',f:'一次性,每季更新款式',d:90},
+      {id:'E9',t:'排程上載所有 post',f:'每週安排,每日 check',d:3},
+      {id:'E10',t:'YouTube 影片 SEO(標題/標籤/縮圖/描述)',f:'每條片都要做',d:null},
+      {id:'E11',t:'YouTube Shorts 製作',f:'每週 2-4 條',d:7}
+    ]},
+    {code:'F', title:'社交媒體經營', items:[
+      {id:'F1',t:'回覆留言',f:'每日,建議 1 小時內',d:1},
+      {id:'F2',t:'回覆 DM',f:'每日,24 小時內',d:1},
+      {id:'F3',t:'處理負評/投訴',f:'24 小時內回應',d:1},
+      {id:'F4',t:'出 Story 投票/問答互動',f:'每週 1-2 次',d:7},
+      {id:'F5',t:'策劃抽獎/活動',f:'每季 1 次',d:90},
+      {id:'F6',t:'監察熱門話題/hashtag 趨勢',f:'每週 check',d:7},
+      {id:'F7',t:'經營 FB 社團/Discord/Telegram 社群',f:'每日輕度互動',d:1},
+      {id:'F8',t:'主動回覆潛在客戶查詢',f:'每日',d:1},
+      {id:'F9',t:'邀請顧客留 IG/FB 評論(DM 跟進)',f:'每週 1 次',d:7}
+    ]},
+    {code:'G', title:'KOL / 網紅合作', items:[
+      {id:'G1',t:'搵合作對象名單',f:'持續更新,每季擴充',d:90},
+      {id:'G2',t:'洽談合作方式同條款',f:'按 campaign 需要',d:null},
+      {id:'G3',t:'寄產品/簽合作合約',f:'按 campaign 需要',d:null},
+      {id:'G4',t:'追蹤合作成效',f:'合作後 1-2 星期內',d:null},
+      {id:'G5',t:'建立長期 KOL 關係',f:'持續進行',d:null},
+      {id:'G6',t:'UGC/hashtag campaign 策劃',f:'每季 1 次',d:90},
+      {id:'G7',t:'KOL/paid 合作廣告披露合規(#ad 標籤)',f:'每次合作都要做',d:null}
+    ]},
+    {code:'H', title:'付費社交廣告', items:[
+      {id:'H1',t:'開 Meta Ads Business 帳戶',f:'一次性',d:null},
+      {id:'H2',t:'設計廣告素材',f:'每個 campaign,建議 2-4 週 refresh',d:21},
+      {id:'H3',t:'撰寫廣告文案',f:'每個 campaign',d:null},
+      {id:'H4',t:'設定 target audience',f:'每個 campaign,每季 review',d:90},
+      {id:'H5',t:'設置 retargeting 廣告',f:'一次性設置,持續更新受眾',d:null},
+      {id:'H6',t:'A/B test 廣告素材',f:'每個新 campaign 首 1-2 星期',d:null},
+      {id:'H7',t:'監察同調整預算',f:'首 2 週每日,穩定後每週',d:7},
+      {id:'H8',t:'設置 Google Ads(SEM)',f:'一次性,每週 review',d:7},
+      {id:'H9',t:'Marketplace 廣告(Amazon PPC/Shopee Ads)',f:'持續,每週 review',d:7}
+    ]},
+    {code:'I', title:'Email Marketing', items:[
+      {id:'I1',t:'建 email list/網站 opt-in 表單',f:'一次性',d:null},
+      {id:'I2',t:'寫 welcome sequence',f:'一次設計,首 2 星期內發 3-5 封',d:null},
+      {id:'I3',t:'寫定期 newsletter',f:'建議每週 1 次起步,最少每月 2-4 次',d:7},
+      {id:'I4',t:'客戶名單分群',f:'一次性設置,每季檢視',d:90},
+      {id:'I5',t:'設計優惠/促銷 email',f:'按節慶/campaign',d:null},
+      {id:'I6',t:'Win-back/重新喚醒 email',f:'每季 1 次',d:90},
+      {id:'I7',t:'Abandoned cart 自動信',f:'一次性設置,持續運行',d:null},
+      {id:'I8',t:'Email list 同意/合規設置(opt-in/一鍵退訂)',f:'一次性設置,持續維持合規',d:null}
+    ]},
+    {code:'J', title:'其他線上推廣', items:[
+      {id:'J1',t:'撰寫 SEM 廣告文案',f:'每個 campaign',d:null},
+      {id:'J2',t:'設置 Affiliate/推薦計劃',f:'一次性設置,每季 review',d:90},
+      {id:'J3',t:'撰寫網上 press release',f:'按重大新聞/launch',d:null},
+      {id:'J4',t:'分發 press release 去媒體',f:'按重大新聞/launch',d:null},
+      {id:'J5',t:'聯絡網媒/部落客做報導/評測',f:'持續,建議每季 1 輪',d:90},
+      {id:'J6',t:'網上 marketplace 開店(Shopee/Lazada/Amazon/Etsy)',f:'一次性設置',d:null},
+      {id:'J7',t:'Podcast 製作(如適用)',f:'每集',d:null},
+      {id:'J8',t:'直播/live commerce(IG Live/TikTok Live)',f:'每週或雙週 1 次',d:7},
+      {id:'J9',t:'App Store Optimization(如有 app)',f:'一次性,app 更新時 review',d:null},
+      {id:'J10',t:'Forum/社群問答經營(Reddit/Quora/FB Groups)',f:'每週固定時間投入',d:7},
+      {id:'J11',t:'Online reputation monitoring',f:'每週 check',d:7},
+      {id:'J12',t:'多平台評論監察(Trustpilot 等)',f:'每週 check 並回覆',d:7},
+      {id:'J13',t:'Chatbot/自動回覆設置(WhatsApp Business API)',f:'一次性設置,每季優化',d:90},
+      {id:'J14',t:'會員/積分/推薦計劃線上系統',f:'一次性設置,持續營運',d:null},
+      {id:'J15',t:'多語言/在地化內容',f:'按市場擴張需要',d:null},
+      {id:'J16',t:'創辦人個人品牌經營(LinkedIn)',f:'每週 1-3 次 po 文',d:7},
+      {id:'J17',t:'揀選/設置 marketing tech stack(CRM/排程/分析)',f:'一次性設置,每年 review',d:365}
+    ]},
+    {code:'K', title:'線下推廣', items:[
+      {id:'K1',t:'設計卡片/傳單/包裝 insert',f:'一次性(換季/換款先重做)',d:null},
+      {id:'K2',t:'印刷物料',f:'按用量,每季 check 存貨',d:90},
+      {id:'K3',t:'Pop-up 店選址',f:'按活動策劃需要',d:null},
+      {id:'K4',t:'申請 pop-up 所需牌照',f:'按活動,建議提早 1-2 個月',d:null},
+      {id:'K5',t:'設計陳列/攤位視覺',f:'每次活動',d:null},
+      {id:'K6',t:'報名參加市集/展銷會',f:'每季留意 1-2 個機會',d:90},
+      {id:'K7',t:'準備 press kit',f:'一次性,大 update 先 refresh',d:null},
+      {id:'K8',t:'建立媒體聯絡名單',f:'一次性,每季擴充',d:90},
+      {id:'K9',t:'Pitch 本地媒體',f:'按重大新聞而定',d:null},
+      {id:'K10',t:'搵本地夥伴做 cross-promotion',f:'持續,建議每季 1 次',d:90},
+      {id:'K11',t:'洽談社區贊助/活動參與',f:'每季留意機會',d:90}
+    ]},
+    {code:'L', title:'正式 Launch', items:[
+      {id:'L1',t:'揀 soft launch 測試名單',f:'一次性(launch 前)',d:null},
+      {id:'L2',t:'收集 soft launch 反饋',f:'Soft launch 後 1-2 星期內',d:null},
+      {id:'L3',t:'排 launch 時間表(線上線下同步)',f:'一次性',d:null},
+      {id:'L4',t:'設計 launch 優惠碼/限量方案',f:'一次性',d:null},
+      {id:'L5',t:'籌辦 launch 活動',f:'一次性',d:null},
+      {id:'L6',t:'邀請 KOL/媒體/熟客出席',f:'Launch 前 2-4 星期開始邀請',d:null},
+      {id:'L7',t:'Launch 當日全渠道同步推廣',f:'Launch 當日',d:null}
+    ]},
+    {code:'M', title:'Analytics / 優化', items:[
+      {id:'M1',t:'設定核心 KPI',f:'一次性,每季 review',d:90},
+      {id:'M2',t:'每週檢視社交媒體數據',f:'每週',d:7},
+      {id:'M3',t:'每月整理 marketing report',f:'每月',d:30},
+      {id:'M4',t:'收集顧客反饋(NPS/評論)',f:'持續,NPS 每季 1 次',d:90},
+      {id:'M5',t:'揪出表現最好內容/廣告並複製元素',f:'每兩星期 1 次',d:14},
+      {id:'M6',t:'調整下一階段 content/廣告策略',f:'每月微調,每季大檢討',d:30},
+      {id:'M7',t:'每季 marketing 策略大檢討會議',f:'每季 1 次',d:90},
+      {id:'M8',t:'年度 marketing plan 總檢討',f:'每年 1 次',d:365}
+    ]}
+  ];
+
+  var SUPABASE_URL = 'PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
+  var SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+  var sbClient = null;
+  var sbChannel = null;
+
+  var BUSINESSES = [
+    {id:'aesthetics', name:'醫美'},
+    {id:'jewelry', name:'珠寶'},
+    {id:'engineering', name:'工程'},
+    {id:'finance', name:'財務'},
+    {id:'ai_marketing', name:'AI marketing'}
+  ];
+
+  function getBusinessFromURL(){
+    try{
+      var params = new URLSearchParams(window.location.search);
+      var b = params.get('biz');
+      if(b && BUSINESSES.some(function(x){ return x.id === b; })) return b;
+    }catch(e){}
+    return null;
+  }
+  function getBusinessFromLocalStorage(){
+    try{
+      var b = localStorage.getItem('brand_checklist_last_biz');
+      if(b && BUSINESSES.some(function(x){ return x.id === b; })) return b;
+    }catch(e){}
+    return null;
+  }
+  var currentBusiness = getBusinessFromURL() || getBusinessFromLocalStorage() || BUSINESSES[0].id;
+
+  function businessName(id){
+    var b = BUSINESSES.filter(function(x){ return x.id === id; })[0];
+    return b ? b.name : id;
+  }
+
+  var historyState = {};
+  var totalCount = 0;
+  var filterMode = 'all';
+  DATA.forEach(function(cat){ totalCount += cat.items.length; });
+
+  var categoriesEl = document.getElementById('categories');
+  var overallFillEl = document.getElementById('overallFill');
+  var overallLabelEl = document.getElementById('overallLabel');
+
+  function todayISO(){
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,'0');
+    var day = String(d.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + day;
+  }
+  function daysBetween(isoA, isoB){
+    var a = new Date(isoA + 'T00:00:00');
+    var b = new Date(isoB + 'T00:00:00');
+    return Math.round((b - a) / 86400000);
+  }
+  function niceDate(iso){
+    var parts = iso.split('-');
+    return parseInt(parts[1],10) + '月' + parseInt(parts[2],10) + '日';
+  }
+
+  function getHistory(id){
+    return (historyState[id] && historyState[id].history) || [];
+  }
+  function deriveChecked(id, cadenceDays){
+    var hist = getHistory(id);
+    if(!hist.length) return false;
+    if(cadenceDays === null || cadenceDays === undefined) return true;
+    var last = hist[hist.length-1];
+    var since = daysBetween(last, todayISO());
+    return since < cadenceDays;
+  }
+  function metaInfo(id, cadenceDays){
+    var hist = getHistory(id);
+    if(!hist.length){
+      return {text:'未做過', tier:'overdue'};
+    }
+    var last = hist[hist.length-1];
+    var since = daysBetween(last, todayISO());
+    if(since < 0) since = 0;
+    var base = '上次: ' + niceDate(last) + '(' + since + ' 日前)';
+    if(since >= cadenceDays){
+      var over = since - cadenceDays;
+      return {text:'已過期 ' + over + ' 日 · ' + base, tier:'overdue'};
+    }
+    var remain = cadenceDays - since;
+    var warnZone = Math.max(1, Math.round(cadenceDays * 0.3));
+    if(remain <= warnZone){
+      return {text: base + ' · 仲有 ' + remain + ' 日到期', tier:'soon'};
+    }
+    return {text: base, tier:'ok'};
+  }
+  function isOverdue(id, cadenceDays){
+    if(cadenceDays === null || cadenceDays === undefined) return false;
+    return metaInfo(id, cadenceDays).tier === 'overdue';
+  }
+
+  function checkIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 9 17 20 6"></polyline></svg>';
+  }
+
+  function findItem(id){
+    for(var i=0;i<DATA.length;i++){
+      for(var j=0;j<DATA[i].items.length;j++){
+        if(DATA[i].items[j].id === id) return DATA[i].items[j];
+      }
+    }
+    return null;
+  }
+
+  function buildDOM(){
+    DATA.forEach(function(cat, idx){
+      var catEl = document.createElement('section');
+      catEl.className = 'cat' + (idx === 0 ? ' expanded' : '');
+      catEl.dataset.code = cat.code;
+
+      var head = document.createElement('div');
+      head.className = 'cat-head';
+      head.innerHTML =
+        '<span class="cat-code">' + cat.code + '</span>' +
+        '<span class="cat-titlewrap">' +
+          '<p class="cat-title">' + cat.title + '</p>' +
+          '<span class="cat-bar-mini"><span class="cat-bar-mini-fill"></span></span>' +
+        '</span>' +
+        '<span class="cat-frac">0/' + cat.items.length + '</span>' +
+        '<span class="cat-chevron">&#9656;</span>';
+      head.addEventListener('click', function(){
+        catEl.classList.toggle('expanded');
+      });
+      catEl.appendChild(head);
+
+      var body = document.createElement('div');
+      body.className = 'cat-body';
+
+      cat.items.forEach(function(item){
+        var wrap = document.createElement('div');
+        wrap.className = 'task-item';
+        wrap.dataset.id = item.id;
+
+        var row = document.createElement('label');
+        row.className = 'task-row';
+        row.innerHTML =
+          '<input type="checkbox" class="chk" data-id="' + item.id + '">' +
+          '<span class="box">' + checkIcon() + '</span>' +
+          '<span class="task-text">' + item.t + '</span>' +
+          '<span class="freq-pill">' + item.f + '</span>';
+        wrap.appendChild(row);
+
+        if(item.d !== null && item.d !== undefined){
+          var meta = document.createElement('div');
+          meta.className = 'recur-meta';
+          meta.innerHTML = '<span data-meta></span><button type="button" class="history-link" data-history-toggle>歷史</button>';
+          wrap.appendChild(meta);
+
+          var hist = document.createElement('div');
+          hist.className = 'history-list hidden';
+          hist.setAttribute('data-history-list','');
+          wrap.appendChild(hist);
+        }
+
+        body.appendChild(wrap);
+      });
+
+      catEl.appendChild(body);
+      categoriesEl.appendChild(catEl);
+    });
+  }
+
+  function renderItem(item){
+    var wrap = categoriesEl.querySelector('.task-item[data-id="'+item.id+'"]');
+    if(!wrap) return;
+    var checked = deriveChecked(item.id, item.d);
+    var chk = wrap.querySelector('.chk');
+    chk.checked = checked;
+    if(item.d !== null && item.d !== undefined){
+      var metaSpan = wrap.querySelector('[data-meta]');
+      if(metaSpan){
+        var info = metaInfo(item.id, item.d);
+        metaSpan.textContent = info.text;
+        metaSpan.className = info.tier === 'soon' ? 'tier-soon' : (info.tier === 'overdue' ? 'tier-overdue' : '');
+      }
+      var histListEl = wrap.querySelector('[data-history-list]');
+      if(histListEl){
+        var hist = getHistory(item.id).slice().reverse();
+        histListEl.innerHTML = hist.length ?
+          ('最近 3 次:<br>' + hist.slice(0,3).map(niceDate).join('、')) :
+          '仲未有完成紀錄。';
+      }
+    }
+    var hide = false;
+    if(filterMode === 'due'){
+      hide = checked;
+    } else if(filterMode === 'overdue'){
+      hide = !(item.d !== null && item.d !== undefined && isOverdue(item.id, item.d));
+    } else if(filterMode !== 'all'){
+      var targetDays = parseInt(filterMode, 10);
+      hide = (item.d !== targetDays);
+    }
+    wrap.classList.toggle('filtered-hide', hide);
+  }
+
+  function updateCategoryUI(code){
+    var cat = null;
+    for (var i=0;i<DATA.length;i++){ if(DATA[i].code===code){ cat=DATA[i]; break; } }
+    if(!cat) return;
+    var done = cat.items.filter(function(it){ return deriveChecked(it.id, it.d); }).length;
+    var catEl = categoriesEl.querySelector('.cat[data-code="'+code+'"]');
+    if(!catEl) return;
+    catEl.querySelector('.cat-frac').textContent = done + '/' + cat.items.length;
+    var pct = cat.items.length ? Math.round(done/cat.items.length*100) : 0;
+    catEl.querySelector('.cat-bar-mini-fill').style.width = pct + '%';
+
+    var visibleCount;
+    if(filterMode === 'all'){
+      visibleCount = cat.items.length;
+    } else if(filterMode === 'due'){
+      visibleCount = cat.items.filter(function(it){ return !deriveChecked(it.id, it.d); }).length;
+    } else if(filterMode === 'overdue'){
+      visibleCount = cat.items.filter(function(it){ return it.d !== null && it.d !== undefined && isOverdue(it.id, it.d); }).length;
+    } else {
+      var targetDays2 = parseInt(filterMode, 10);
+      visibleCount = cat.items.filter(function(it){ return it.d === targetDays2; }).length;
+    }
+    catEl.classList.toggle('filtered-empty', visibleCount === 0);
+    if(filterMode !== 'all' && visibleCount > 0){
+      catEl.classList.add('expanded');
+    }
+  }
+
+  function updateOverallUI(){
+    var done = 0;
+    DATA.forEach(function(cat){
+      cat.items.forEach(function(it){ if(deriveChecked(it.id, it.d)) done++; });
+    });
+    var pct = totalCount ? Math.round(done/totalCount*100) : 0;
+    overallFillEl.style.width = pct + '%';
+    var msg = '<b>' + done + ' / ' + totalCount + '</b> 完成 · ' + pct + '%';
+    if(pct === 100 && totalCount > 0){ msg += ' · 🎉 全部搞掂!'; }
+    overallLabelEl.innerHTML = msg;
+  }
+
+  function updateTodayNudge(){
+    var dueDaily = 0, dueWeekly = 0;
+    DATA.forEach(function(cat){
+      cat.items.forEach(function(it){
+        if(deriveChecked(it.id, it.d)) return;
+        if(it.d === 1) dueDaily++;
+        else if(it.d === 3 || it.d === 7) dueWeekly++;
+      });
+    });
+    var nudgeEl = document.getElementById('todayNudge');
+    if(!nudgeEl) return;
+    if(dueDaily === 0 && dueWeekly === 0){
+      nudgeEl.classList.remove('show');
+      return;
+    }
+    var parts = [];
+    if(dueDaily > 0) parts.push('今日 ' + dueDaily + ' 項');
+    if(dueWeekly > 0) parts.push('本星期 ' + dueWeekly + ' 項');
+    nudgeEl.textContent = '⏰ ' + parts.join(' · ') + ' 未剔 —— 撳「而家要做」睇晒佢哋';
+    nudgeEl.classList.add('show');
+  }
+
+  function renderAll(){
+    DATA.forEach(function(cat){
+      cat.items.forEach(function(it){ renderItem(it); });
+      updateCategoryUI(cat.code);
+    });
+    updateOverallUI();
+    updateTodayNudge();
+  }
+
+  function persistTask(id){
+    if(!sbClient) return;
+    try{
+      sbClient.from('checklist_state').upsert({
+        business_id: currentBusiness,
+        task_id: id,
+        history: getHistory(id),
+        updated_at: new Date().toISOString()
+      }).then(function(res){
+        if(res && res.error){ console.error('Supabase upsert error:', res.error); }
+      });
+    }catch(e){ console.error(e); }
+  }
+
+  categoriesEl.addEventListener('click', function(e){
+    var histBtn = e.target.closest('[data-history-toggle]');
+    if(histBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      var wrap = histBtn.closest('.task-item');
+      var listEl = wrap.querySelector('[data-history-list]');
+      listEl.classList.toggle('hidden');
+    }
+  });
+
+  categoriesEl.addEventListener('change', function(e){
+    if(!e.target.classList.contains('chk')) return;
+    var id = e.target.dataset.id;
+    var item = findItem(id);
+    if(!item) return;
+    var nowChecked = e.target.checked;
+    if(!historyState[id]) historyState[id] = {history:[]};
+    var hist = historyState[id].history;
+    if(nowChecked){
+      var today = todayISO();
+      if(hist[hist.length-1] !== today){ hist.push(today); }
+    } else {
+      if(hist.length){ hist.pop(); }
+    }
+    renderItem(item);
+    updateCategoryUI(item.__cat || id.match(/^[A-Za-z]+/)[0]);
+    updateOverallUI();
+    persistTask(id);
+  });
+
+  document.getElementById('expandAllBtn').addEventListener('click', function(){
+    categoriesEl.querySelectorAll('.cat').forEach(function(c){ c.classList.add('expanded'); });
+  });
+  document.getElementById('collapseAllBtn').addEventListener('click', function(){
+    categoriesEl.querySelectorAll('.cat').forEach(function(c){ c.classList.remove('expanded'); });
+  });
+
+  var filterRowEl = document.getElementById('filterRow');
+  filterRowEl.addEventListener('click', function(e){
+    var btn = e.target.closest('.filter-btn');
+    if(!btn) return;
+    filterMode = btn.dataset.filter;
+    filterRowEl.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderAll();
+  });
+
+  var resetBtn = document.getElementById('resetBtn');
+  var resetConfirm = document.getElementById('resetConfirm');
+  var resetConfirmText = resetConfirm.querySelector('span');
+  resetBtn.addEventListener('click', function(){
+    if(resetConfirmText) resetConfirmText.textContent = '確定要清除「' + businessName(currentBusiness) + '」呢個business嘅所有已剔選同紀錄?呢個動作冇得還原,其他business唔會受影響。';
+    resetConfirm.classList.remove('hidden');
+  });
+  document.getElementById('resetConfirmNo').addEventListener('click', function(){ resetConfirm.classList.add('hidden'); });
+  document.getElementById('resetConfirmYes').addEventListener('click', function(){
+    historyState = {};
+    renderAll();
+    if(sbClient){
+      sbClient.from('checklist_state').delete().eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('Supabase delete error:', res.error); }
+      });
+    }
+    resetConfirm.classList.add('hidden');
+  });
+
+  buildDOM();
+  renderAll();
+
+  function applyRowToState(row){
+    if(!row || !row.task_id || row.business_id !== currentBusiness) return;
+    historyState[row.task_id] = { history: row.history || [] };
+    var item = findItem(row.task_id);
+    if(item){
+      renderItem(item);
+      updateCategoryUI(row.task_id.match(/^[A-Za-z]+/)[0]);
+      updateOverallUI();
+      updateTodayNudge();
+    }
+  }
+
+  function subscribeRealtimeForBusiness(){
+    if(!sbClient) return;
+    if(sbChannel){ sbClient.removeChannel(sbChannel); sbChannel = null; }
+    sbChannel = sbClient
+      .channel('checklist-changes-' + currentBusiness)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'checklist_state',
+        filter: 'business_id=eq.' + currentBusiness
+      }, function(payload){
+        if(payload.eventType === 'DELETE'){
+          historyState = {};
+          renderAll();
+          return;
+        }
+        applyRowToState(payload.new);
+      })
+      .subscribe();
+  }
+
+  function loadBusinessData(){
+    if(!sbClient){ renderAll(); return; }
+    sbClient.from('checklist_state').select('*').eq('business_id', currentBusiness).then(function(res){
+      historyState = {};
+      if(res && res.data){
+        res.data.forEach(function(row){
+          historyState[row.task_id] = { history: row.history || [] };
+        });
+      }
+      renderAll();
+    });
+    subscribeRealtimeForBusiness();
+  }
+
+  function setBusiness(id){
+    if(!BUSINESSES.some(function(x){ return x.id === id; })) return;
+    currentBusiness = id;
+    try{ localStorage.setItem('brand_checklist_last_biz', id); }catch(e){}
+    try{
+      var url = new URL(window.location.href);
+      url.searchParams.set('biz', id);
+      window.history.replaceState({}, '', url);
+    }catch(e){}
+    var tagEl = document.getElementById('bizNameTag');
+    if(tagEl) tagEl.textContent = businessName(id);
+    filterMode = 'all';
+    filterRowEl.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    var allBtn = filterRowEl.querySelector('[data-filter="all"]');
+    if(allBtn) allBtn.classList.add('active');
+    categoriesEl.querySelectorAll('.cat').forEach(function(c, idx){
+      c.classList.toggle('expanded', idx === 0);
+    });
+    loadBusinessData();
+  }
+
+  var bizSelectEl = document.getElementById('bizSelect');
+  BUSINESSES.forEach(function(b){
+    var opt = document.createElement('option');
+    opt.value = b.id;
+    opt.textContent = b.name;
+    bizSelectEl.appendChild(opt);
+  });
+  bizSelectEl.value = currentBusiness;
+  document.getElementById('bizNameTag').textContent = businessName(currentBusiness);
+  bizSelectEl.addEventListener('change', function(){ setBusiness(this.value); });
+
+  (function initSupabase(){
+    if(typeof supabase === 'undefined' || !SUPABASE_URL || SUPABASE_URL.indexOf('PASTE_') === 0){
+      console.warn('Supabase 未設定:請將 SUPABASE_URL / SUPABASE_ANON_KEY 換成你自己個project嘅資料。');
+      renderAll();
+      return;
+    }
+    sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    loadBusinessData();
+  })();
+})();
+</script>
+</body>
+</html>
