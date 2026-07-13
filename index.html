@@ -157,6 +157,10 @@
   .todo-del:hover{color:var(--danger);}
   .todo-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;}
 
+  .todo-undo-toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:50;width:min(92vw,420px);}
+  .todo-undo-toast{background:var(--header-bg);color:var(--header-ink);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.22);}
+  .todo-undo-toast button{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;padding:4px 8px;flex-shrink:0;}
+
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;animation:none !important;}
   }
@@ -244,6 +248,7 @@
 
   <p class="foot">呢版嘅剔選記錄實時共享,自動save落雲端資料庫。跟住個頻率持續做,個 marketing engine 就會一直運轉落去。</p>
 </div>
+<div class="todo-undo-toasts" id="todoUndoToasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -823,7 +828,7 @@
     var days = daysBetween(todayISO(), item.deadline);
     if(days < 0) return 'overdue';
     if(days === 0) return 'today';
-    if(days <= 2) return 'soon';
+    if(days <= 3) return 'soon';
     return 'ok';
   }
   function todoTier(item){
@@ -1017,14 +1022,48 @@
     }
   }
 
+  var TODO_UNDO_MS = 8000;
+
   function deleteTodoItem(slot, id){
-    customTodos[slot] = (customTodos[slot]||[]).filter(function(x){ return x.id !== id; });
+    var arr = customTodos[slot] || [];
+    var idx = arr.findIndex(function(x){ return x.id === id; });
+    if(idx === -1) return;
+    var item = arr[idx];
+    arr.splice(idx, 1);
     renderTodoColumn(slot);
-    if(sbClient){
-      sbClient.from('custom_todos').delete().eq('id', id).eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('todo delete error', res.error); }
-      });
+    showTodoUndoToast(slot, item, currentBusiness);
+  }
+
+  function showTodoUndoToast(slot, item, businessAtDelete){
+    var container = document.getElementById('todoUndoToasts');
+    if(!container){
+      finalizeTodoDelete(item.id, businessAtDelete);
+      return;
     }
+    var toast = document.createElement('div');
+    toast.className = 'todo-undo-toast';
+    toast.innerHTML = '<span>已刪除「' + escapeHtml(item.task) + '」</span><button type="button">撤回</button>';
+    container.appendChild(toast);
+    var timeoutId = setTimeout(function(){
+      if(toast.parentNode) toast.parentNode.removeChild(toast);
+      finalizeTodoDelete(item.id, businessAtDelete);
+    }, TODO_UNDO_MS);
+    toast.querySelector('button').addEventListener('click', function(){
+      clearTimeout(timeoutId);
+      if(toast.parentNode) toast.parentNode.removeChild(toast);
+      if(currentBusiness === businessAtDelete){
+        customTodos[slot] = customTodos[slot] || [];
+        customTodos[slot].push(item);
+        renderTodoColumn(slot);
+      }
+    });
+  }
+
+  function finalizeTodoDelete(id, businessAtDelete){
+    if(!sbClient) return;
+    sbClient.from('custom_todos').delete().eq('id', id).eq('business_id', businessAtDelete).then(function(res){
+      if(res && res.error){ console.error('todo delete error', res.error); }
+    });
   }
 
   function saveTodoName(slot, name){
