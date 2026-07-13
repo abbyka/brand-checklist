@@ -121,6 +121,10 @@
   .todo-head{max-width:900px;margin:0 auto 16px;}
   .todo-title{font-size:20px;font-weight:700;margin:2px 0 8px;}
   .todo-sub{font-size:13px;color:var(--ink-soft);margin:0;}
+  .todo-filter-row{display:flex;gap:8px;flex-wrap:wrap;max-width:900px;margin:0 auto 16px;}
+  .todo-filter-btn{font-family:var(--font-mono);font-size:12px;background:rgba(27,51,88,.06);border:1px solid var(--card-border);color:var(--ink-soft);padding:7px 14px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s;}
+  .todo-filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--header-bg);font-weight:700;}
+  .todo-filter-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .todo-columns{display:flex;gap:14px;flex-wrap:wrap;max-width:900px;margin:0 auto;}
   .todo-col{flex:1 1 300px;min-width:260px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;}
   .todo-col-name{width:100%;font-family:var(--font-cjk);font-weight:700;font-size:15px;color:var(--ink);border:none;border-bottom:1.5px dashed var(--card-border);background:transparent;padding:2px 0 8px;margin-bottom:10px;}
@@ -137,9 +141,18 @@
   .todo-main{flex:1;min-width:0;}
   .todo-text{font-size:13.8px;color:var(--ink);word-break:break-word;}
   .todo-item.done .todo-text{color:var(--ink-soft);text-decoration:line-through;text-decoration-color:rgba(27,51,88,.35);}
-  .todo-deadline{display:inline-block;margin-top:4px;font-family:var(--font-mono);font-size:10.8px;padding:2px 8px;border-radius:999px;background:rgba(51,88,125,.08);color:var(--line);}
-  .todo-deadline.tier-soon{color:var(--accent);font-weight:600;background:rgba(226,154,61,.14);}
-  .todo-deadline.tier-overdue{color:var(--danger);font-weight:700;background:rgba(179,64,46,.12);}
+  .todo-item.filtered-hide{display:none;}
+  .todo-num{display:inline-block;min-width:16px;font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:var(--line);margin-right:4px;}
+  .todo-deadline-wrap{position:relative;display:inline-block;margin-top:4px;cursor:pointer;}
+  .todo-deadline-pill{display:inline-block;font-family:var(--font-mono);font-size:10.8px;padding:2px 8px;border-radius:999px;background:rgba(51,88,125,.08);color:var(--line);pointer-events:none;}
+  .todo-deadline-pill.tier-soon{color:var(--accent);font-weight:600;background:rgba(226,154,61,.14);}
+  .todo-deadline-pill.tier-overdue{color:var(--danger);font-weight:700;background:rgba(179,64,46,.12);}
+  .todo-deadline-pill.tier-none{color:var(--ink-soft);}
+  .todo-deadline-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;padding:0;margin:0;cursor:pointer;}
+  .todo-deadline-wrap:focus-within .todo-deadline-pill{outline:2px solid var(--accent);outline-offset:2px;}
+  .todo-wait-btn{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;flex-shrink:0;opacity:.55;}
+  .todo-wait-btn:hover{opacity:1;}
+  .todo-wait-btn.active{color:var(--accent);opacity:1;}
   .todo-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .todo-del:hover{color:var(--danger);}
   .todo-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;}
@@ -161,6 +174,8 @@
     .task-row{padding-left:34px;}
     .recur-meta,.history-list{margin-left:34px;}
     .todo-section{padding:24px 12px 0;}
+    .todo-filter-row{margin:0 0 14px;}
+    .todo-filter-btn{font-size:11px;padding:6px 12px;}
     .todo-col{padding:13px;min-width:0;}
   }
 </style>
@@ -215,7 +230,14 @@
     <div class="todo-head">
       <p class="eyebrow eyebrow-dark">CUSTOM · 自訂 To-Do List</p>
       <h2 class="todo-title">兩個人嘅共用清單</h2>
-      <p class="todo-sub">自己打字加task,填deadline;過期會著色提你。</p>
+      <p class="todo-sub">自己打字加task,填deadline;過期會著色提你。撳死線pill隨時可以改日期。</p>
+    </div>
+    <div class="todo-filter-row" id="todoFilterRow">
+      <button class="todo-filter-btn active" data-filter="all" type="button">全部</button>
+      <button class="todo-filter-btn" data-filter="today" type="button">今日</button>
+      <button class="todo-filter-btn" data-filter="soon" type="button">就快過期</button>
+      <button class="todo-filter-btn" data-filter="overdue" type="button">已過期</button>
+      <button class="todo-filter-btn" data-filter="waiting" type="button">等回覆</button>
     </div>
     <div class="todo-columns" id="todoColumns"></div>
   </section>
@@ -301,7 +323,9 @@
       {id:'D5',t:'設置 link in bio(Linktree/Beacons)',f:'一次性設置,持續更新連結',d:null},
       {id:'D6',t:'開設 YouTube 頻道 + 版面設計',f:'一次性',d:null},
       {id:'D7',t:'開設官方 WhatsApp Business 帳號',f:'一次性',d:null},
-      {id:'D8',t:'開設 FB 社團/Discord/Telegram 社群',f:'一次性',d:null}
+      {id:'D8',t:'開設 FB 社團/Discord/Telegram 社群',f:'一次性',d:null},
+      {id:'D9',t:'串聯所有social media自動化排程(IG/FB/TikTok/小紅書/YouTube/LinkedIn/Threads/WhatsApp Business/Telegram全部用工具駁埋一齊)',f:'一次性設置,每季 review',d:90},
+      {id:'D10',t:'養後備IG號(定期發文/follow/互動,防主號有事有後備隨時頂上)',f:'每幾日 1 次',d:3}
     ]},
     {code:'E', title:'社交媒體內容製作', items:[
       {id:'E1',t:'定 content pillar(3-5 條主題)',f:'一次性,每半年 review',d:182},
@@ -411,8 +435,8 @@
     ]}
   ];
 
-  var SUPABASE_URL = 'PASTE_YOUR_SUPABASE_PROJECT_URL_HERE';
-  var SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+  var SUPABASE_URL = 'https://umbpnhbnyjgqmoilxbfu.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_l2VM6-NBoj3q6KbakOsB9A_iIyoUu4-';
   var sbClient = null;
   var sbChannel = null;
 
@@ -772,8 +796,19 @@
   var customTodos = {p1:[], p2:[]};
   var todoNames = {p1:'', p2:''};
   var todoChannel = null;
+  var todoFilterMode = 'all';
   var todoColumnsEl = document.getElementById('todoColumns');
   buildTodoColumns();
+
+  var todoFilterRowEl = document.getElementById('todoFilterRow');
+  todoFilterRowEl.addEventListener('click', function(e){
+    var btn = e.target.closest('.todo-filter-btn');
+    if(!btn) return;
+    todoFilterMode = btn.dataset.filter;
+    todoFilterRowEl.querySelectorAll('.todo-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderAllTodos();
+  });
 
   function escapeHtml(s){
     var d = document.createElement('div');
@@ -783,13 +818,30 @@
   function genTodoId(){
     return 'todo_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
   }
-  function todoTier(item){
-    if(item.done) return 'done';
+  function todoDueTier(item){
     if(!item.deadline) return 'none';
     var days = daysBetween(todayISO(), item.deadline);
     if(days < 0) return 'overdue';
+    if(days === 0) return 'today';
     if(days <= 2) return 'soon';
     return 'ok';
+  }
+  function todoTier(item){
+    if(item.done) return 'done';
+    var t = todoDueTier(item);
+    if(t === 'overdue') return 'overdue';
+    if(t === 'today' || t === 'soon') return 'soon';
+    return t;
+  }
+  function todoItemHidden(item){
+    if(todoFilterMode === 'all') return false;
+    if(todoFilterMode === 'waiting') return !item.waiting || item.done;
+    if(item.done) return true;
+    var t = todoDueTier(item);
+    if(todoFilterMode === 'today') return t !== 'today';
+    if(todoFilterMode === 'soon') return t !== 'soon';
+    if(todoFilterMode === 'overdue') return t !== 'overdue';
+    return false;
   }
   function todoDeadlineText(item){
     if(!item.deadline) return '';
@@ -867,25 +919,50 @@
       listEl.appendChild(empty);
       return;
     }
+    var seq = 0;
+    var anyVisible = false;
     items.forEach(function(item){
       var li = document.createElement('li');
-      li.className = 'todo-item' + (item.done ? ' done' : '');
+      var hidden = todoItemHidden(item);
+      if(!hidden) anyVisible = true;
+      li.className = 'todo-item' + (item.done ? ' done' : '') + (hidden ? ' filtered-hide' : '');
       li.dataset.id = item.id;
       var tier = todoTier(item);
-      var deadlineHtml = item.deadline ? ('<span class="todo-deadline' + (tier==='soon'?' tier-soon':tier==='overdue'?' tier-overdue':'') + '">' + todoDeadlineText(item) + '</span>') : '';
+      var numLabel = '';
+      if(!item.done){ seq++; numLabel = '<span class="todo-num">' + seq + '.</span>'; }
+      var pillClass = 'todo-deadline-pill' + (tier==='soon'?' tier-soon':tier==='overdue'?' tier-overdue':(!item.deadline?' tier-none':''));
+      var pillText = item.deadline ? todoDeadlineText(item) : '+ 加死線';
+      var deadlineHtml =
+        '<label class="todo-deadline-wrap">' +
+          '<span class="' + pillClass + '">' + pillText + '</span>' +
+          '<input type="date" class="todo-deadline-input" value="' + (item.deadline || '') + '">' +
+        '</label>';
       li.innerHTML =
         '<input type="checkbox" class="todo-chk"' + (item.done?' checked':'') + '>' +
-        '<span class="todo-main"><span class="todo-text">' + escapeHtml(item.task) + '</span><br>' + deadlineHtml + '</span>' +
+        '<span class="todo-main"><span class="todo-text">' + numLabel + escapeHtml(item.task) + '</span><br>' + deadlineHtml + '</span>' +
+        '<button type="button" class="todo-wait-btn' + (item.waiting?' active':'') + '" title="等緊回覆">⏳</button>' +
         '<button type="button" class="todo-del" title="刪除">✕</button>';
       listEl.appendChild(li);
 
       li.querySelector('.todo-chk').addEventListener('change', function(e){
         toggleTodoItem(slot, item.id, e.target.checked);
       });
+      li.querySelector('.todo-deadline-input').addEventListener('change', function(e){
+        updateTodoDeadline(slot, item.id, e.target.value || null);
+      });
+      li.querySelector('.todo-wait-btn').addEventListener('click', function(){
+        toggleTodoWaiting(slot, item.id, !item.waiting);
+      });
       li.querySelector('.todo-del').addEventListener('click', function(){
         deleteTodoItem(slot, item.id);
       });
     });
+    if(!anyVisible){
+      var emptyFilter = document.createElement('li');
+      emptyFilter.className = 'todo-empty';
+      emptyFilter.textContent = '呢個篩選下冇嘢。';
+      listEl.appendChild(emptyFilter);
+    }
   }
 
   function renderAllTodos(){
@@ -893,13 +970,13 @@
   }
 
   function addTodoItem(slot, text, deadline){
-    var item = {id: genTodoId(), task:text, deadline: deadline || null, done:false};
+    var item = {id: genTodoId(), task:text, deadline: deadline || null, done:false, waiting:false};
     customTodos[slot] = customTodos[slot] || [];
     customTodos[slot].push(item);
     renderTodoColumn(slot);
     if(sbClient){
       sbClient.from('custom_todos').insert({
-        id:item.id, business_id: currentBusiness, slot:slot, task:text, deadline:item.deadline, done:false
+        id:item.id, business_id: currentBusiness, slot:slot, task:text, deadline:item.deadline, done:false, waiting:false
       }).then(function(res){ if(res && res.error){ console.error('todo insert error', res.error); } });
     }
   }
@@ -912,6 +989,30 @@
     if(sbClient){
       sbClient.from('custom_todos').update({done:done}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
         if(res && res.error){ console.error('todo update error', res.error); }
+      });
+    }
+  }
+
+  function updateTodoDeadline(slot, id, deadline){
+    var arr = customTodos[slot] || [];
+    var item = arr.filter(function(x){ return x.id === id; })[0];
+    if(item){ item.deadline = deadline; }
+    renderTodoColumn(slot);
+    if(sbClient){
+      sbClient.from('custom_todos').update({deadline:deadline}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('todo deadline update error', res.error); }
+      });
+    }
+  }
+
+  function toggleTodoWaiting(slot, id, waiting){
+    var arr = customTodos[slot] || [];
+    var item = arr.filter(function(x){ return x.id === id; })[0];
+    if(item){ item.waiting = waiting; }
+    renderTodoColumn(slot);
+    if(sbClient){
+      sbClient.from('custom_todos').update({waiting:waiting}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('todo waiting update error', res.error); }
       });
     }
   }
@@ -944,7 +1045,7 @@
       customTodos[slot] = customTodos[slot].filter(function(x){ return x.id !== row.id; });
     } else {
       var idx = customTodos[slot].findIndex(function(x){ return x.id === row.id; });
-      var newItem = {id: row.id, task: row.task, deadline: row.deadline, done: !!row.done};
+      var newItem = {id: row.id, task: row.task, deadline: row.deadline, done: !!row.done, waiting: !!row.waiting};
       if(idx === -1){ customTodos[slot].push(newItem); } else { customTodos[slot][idx] = newItem; }
     }
     renderTodoColumn(slot);
@@ -979,7 +1080,7 @@
       if(res && res.data){
         res.data.forEach(function(row){
           customTodos[row.slot] = customTodos[row.slot] || [];
-          customTodos[row.slot].push({id:row.id, task:row.task, deadline:row.deadline, done:!!row.done});
+          customTodos[row.slot].push({id:row.id, task:row.task, deadline:row.deadline, done:!!row.done, waiting:!!row.waiting});
         });
       }
       renderAllTodos();
