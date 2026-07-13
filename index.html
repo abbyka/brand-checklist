@@ -132,9 +132,6 @@
   .todo-add-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
   .todo-add-text{flex:1 1 140px;font-family:var(--font-cjk);font-size:13px;padding:8px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--ink);}
   .todo-add-date{font-family:var(--font-mono);font-size:12px;padding:8px 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--ink);}
-  .todo-add-wait-btn{font-family:var(--font-mono);font-size:14px;background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:7px 11px;cursor:pointer;color:var(--ink-soft);opacity:.55;}
-  .todo-add-wait-btn:hover{opacity:.85;}
-  .todo-add-wait-btn.active{opacity:1;color:var(--accent);border-color:var(--accent);background:rgba(226,154,61,.14);}
   .todo-add-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--header-bg);color:var(--header-ink);border:none;border-radius:8px;padding:8px 14px;cursor:pointer;}
   .todo-add-btn:hover{opacity:.88;}
   .todo-list{list-style:none;margin:0;padding:0;}
@@ -879,7 +876,6 @@
       addRow.innerHTML =
         '<input type="text" class="todo-add-text" placeholder="打新task…">' +
         '<input type="date" class="todo-add-date">' +
-        '<button type="button" class="todo-add-wait-btn" title="呢個task一齊標記做等緊回覆">⏳</button>' +
         '<button type="button" class="todo-add-btn">+ 加</button>';
       col.appendChild(addRow);
 
@@ -894,18 +890,12 @@
       var addBtn = addRow.querySelector('.todo-add-btn');
       var textInput = addRow.querySelector('.todo-add-text');
       var dateInput = addRow.querySelector('.todo-add-date');
-      var addWaitBtn = addRow.querySelector('.todo-add-wait-btn');
-      addWaitBtn.addEventListener('click', function(){
-        addWaitBtn.classList.toggle('active');
-      });
       addBtn.addEventListener('click', function(){
         var text = textInput.value.trim();
         if(!text) return;
-        var waiting = addWaitBtn.classList.contains('active');
-        addTodoItem(slot, text, dateInput.value || null, waiting);
+        addTodoItem(slot, text, dateInput.value || null);
         textInput.value = '';
         dateInput.value = '';
-        addWaitBtn.classList.remove('active');
       });
       textInput.addEventListener('keydown', function(e){
         if(e.key === 'Enter'){ addBtn.click(); }
@@ -984,14 +974,14 @@
     TODO_SLOTS.forEach(function(slot){ renderTodoColumn(slot); });
   }
 
-  function addTodoItem(slot, text, deadline, waiting){
-    var item = {id: genTodoId(), task:text, deadline: deadline || null, done:false, waiting: !!waiting};
+  function addTodoItem(slot, text, deadline){
+    var item = {id: genTodoId(), task:text, deadline: deadline || null, done:false, waiting:false};
     customTodos[slot] = customTodos[slot] || [];
     customTodos[slot].push(item);
     renderTodoColumn(slot);
     if(sbClient){
       sbClient.from('custom_todos').insert({
-        id:item.id, business_id: currentBusiness, slot:slot, task:text, deadline:item.deadline, done:false, waiting: !!waiting
+        id:item.id, business_id: currentBusiness, slot:slot, task:text, deadline:item.deadline, done:false, waiting:false
       }).then(function(res){ if(res && res.error){ console.error('todo insert error', res.error); } });
     }
   }
