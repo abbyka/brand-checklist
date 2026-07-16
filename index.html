@@ -167,12 +167,15 @@
   .life-log-add-text{flex:1 1 200px;font-family:var(--font-cjk);font-size:13px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
   .life-log-add-cadence{font-family:var(--font-mono);font-size:12.5px;padding:9px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
   .life-log-add-category{flex:0 1 140px;font-family:var(--font-cjk);font-size:13px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
+  .life-log-add-category-new{flex:0 1 140px;font-family:var(--font-cjk);font-size:13px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
+  .life-log-add-category-new.hidden{display:none;}
   .life-log-add-date{font-family:var(--font-mono);font-size:12px;padding:9px 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
   .life-log-add-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--header-bg);color:var(--header-ink);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;}
   .life-log-add-btn:hover{opacity:.88;}
   .life-log-list{list-style:none;margin:0;padding:0 18px;max-width:900px;margin:0 auto;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);}
   .life-log-item{padding:14px 0;border-top:1px solid rgba(27,51,88,.07);}
   .life-log-item:first-child{border-top:none;}
+  .life-log-num{display:inline-block;min-width:16px;font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:var(--line);margin-right:4px;}
   .life-log-row-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
   .life-log-name{font-weight:700;font-size:15px;color:var(--ink);}
   .life-log-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
@@ -284,8 +287,8 @@
     </div>
     <div class="life-log-add-row">
       <input type="text" class="life-log-add-text" placeholder="加新項目,例如:針灸">
-      <input type="text" class="life-log-add-category" list="lifeLogCatOptions" placeholder="類別(可選,揀現有或打新)">
-      <datalist id="lifeLogCatOptions"></datalist>
+      <select class="life-log-add-category"></select>
+      <input type="text" class="life-log-add-category-new hidden" placeholder="打新分類名">
       <select class="life-log-add-cadence">
         <option value="">唔提醒,淨係記日子</option>
         <option value="1">每日</option>
@@ -1204,10 +1207,12 @@
   }
 
   var CADENCE_LABELS = {1:'每日',3:'每幾日',7:'每星期',14:'每兩星期',21:'每3星期',30:'每月',90:'每幾個月',182:'每半年',365:'一年'};
+  var LIFE_LOG_PRESET_CATEGORIES = ['醫美','中醫/按摩','Gym','Facial'];
   var lifeLogItems = [];
   var lifeLogChannel = null;
   var lifeLogListEl = document.getElementById('lifeLogList');
-  var lifeLogCatOptionsEl = document.getElementById('lifeLogCatOptions');
+  var lifeLogAddCategorySel = document.querySelector('.life-log-add-category');
+  var lifeLogAddCategoryNewEl = document.querySelector('.life-log-add-category-new');
 
   function genLifeLogId(){
     return 'life_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
@@ -1234,14 +1239,22 @@
   function lifeLogCategories(){
     var set = {};
     lifeLogItems.forEach(function(it){ if(it.category) set[it.category] = true; });
-    return Object.keys(set).sort();
+    var used = Object.keys(set).sort();
+    var combined = LIFE_LOG_PRESET_CATEGORIES.slice();
+    used.forEach(function(c){ if(combined.indexOf(c) === -1) combined.push(c); });
+    return combined;
   }
 
   function updateLifeLogCategoryOptions(){
-    if(!lifeLogCatOptionsEl) return;
-    lifeLogCatOptionsEl.innerHTML = lifeLogCategories().map(function(c){
-      return '<option value="' + escapeHtml(c) + '"></option>';
-    }).join('');
+    if(!lifeLogAddCategorySel) return;
+    var current = lifeLogAddCategorySel.value;
+    var html = '<option value="">(無類別)</option>';
+    lifeLogCategories().forEach(function(c){
+      html += '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
+    });
+    html += '<option value="__new__">+ 新分類…</option>';
+    lifeLogAddCategorySel.innerHTML = html;
+    if(current && current !== '__new__') lifeLogAddCategorySel.value = current;
   }
 
   function renderLifeLog(){
@@ -1255,7 +1268,7 @@
       lifeLogListEl.appendChild(empty);
       return;
     }
-    lifeLogItems.forEach(function(item){
+    lifeLogItems.forEach(function(item, idx){
       var li = document.createElement('li');
       li.className = 'life-log-item';
       li.dataset.id = item.id;
@@ -1268,7 +1281,7 @@
       if(cadenceLabel) badges += ' <span class="freq-pill">' + cadenceLabel + '</span>';
       li.innerHTML =
         '<div class="life-log-row-head">' +
-          '<span class="life-log-name">' + escapeHtml(item.label) + badges + '</span>' +
+          '<span class="life-log-name"><span class="life-log-num">' + (idx+1) + '.</span>' + escapeHtml(item.label) + badges + '</span>' +
           '<button type="button" class="life-log-del" title="刪除">✕</button>' +
         '</div>' +
         '<div class="life-log-status' + (status.tier==='soon'?' tier-soon':status.tier==='overdue'?' tier-overdue':'') + '">' + status.text + '</div>' +
@@ -1399,20 +1412,33 @@
   }
 
   var lifeLogAddText = document.querySelector('.life-log-add-text');
-  var lifeLogAddCategory = document.querySelector('.life-log-add-category');
   var lifeLogAddCadence = document.querySelector('.life-log-add-cadence');
   var lifeLogAddDate = document.querySelector('.life-log-add-date');
   var lifeLogAddBtn = document.querySelector('.life-log-add-btn');
+  if(lifeLogAddCategorySel && lifeLogAddCategoryNewEl){
+    lifeLogAddCategorySel.addEventListener('change', function(){
+      var isNew = lifeLogAddCategorySel.value === '__new__';
+      lifeLogAddCategoryNewEl.classList.toggle('hidden', !isNew);
+      if(isNew) lifeLogAddCategoryNewEl.focus();
+    });
+  }
   if(lifeLogAddBtn){
     lifeLogAddBtn.addEventListener('click', function(){
       var label = lifeLogAddText.value.trim();
       if(!label) return;
-      var category = lifeLogAddCategory.value.trim() || null;
+      var category = null;
+      if(lifeLogAddCategorySel.value === '__new__'){
+        category = lifeLogAddCategoryNewEl.value.trim() || null;
+      } else {
+        category = lifeLogAddCategorySel.value || null;
+      }
       var cadenceVal = lifeLogAddCadence.value ? parseInt(lifeLogAddCadence.value, 10) : null;
       var initialDate = lifeLogAddDate.value || null;
       addLifeLogItem(label, cadenceVal, category, initialDate);
       lifeLogAddText.value = '';
-      lifeLogAddCategory.value = '';
+      lifeLogAddCategorySel.value = '';
+      lifeLogAddCategoryNewEl.value = '';
+      lifeLogAddCategoryNewEl.classList.add('hidden');
       lifeLogAddCadence.value = '';
       lifeLogAddDate.value = '';
     });
