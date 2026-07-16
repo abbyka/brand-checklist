@@ -284,6 +284,7 @@
       <p class="eyebrow eyebrow-dark">PERSONAL · 生活記錄</p>
       <h2 class="todo-title">日子記錄</h2>
       <p class="todo-sub">針灸、睇中醫、按摩、Facial、醫美療程、Gym…自己加項目,撳「記錄今日」留底,幫你記得幾時再去做。</p>
+      <p class="today-nudge" id="lifeLogNudge"></p>
     </div>
     <div class="life-log-add-row">
       <input type="text" class="life-log-add-text" placeholder="加新項目,例如:針灸">
@@ -1257,8 +1258,29 @@
     if(current && current !== '__new__') lifeLogAddCategorySel.value = current;
   }
 
+  function updateLifeLogNudge(){
+    var nudgeEl = document.getElementById('lifeLogNudge');
+    if(!nudgeEl) return;
+    var overdue = [], soon = [];
+    lifeLogItems.forEach(function(item){
+      var s = lifeLogStatus(item);
+      if(s.tier === 'overdue') overdue.push(item.label);
+      else if(s.tier === 'soon') soon.push(item.label);
+    });
+    if(!overdue.length && !soon.length){
+      nudgeEl.classList.remove('show');
+      return;
+    }
+    var parts = [];
+    if(overdue.length) parts.push('已過期:' + overdue.join('、'));
+    if(soon.length) parts.push('就快到期:' + soon.join('、'));
+    nudgeEl.textContent = '⏰ ' + parts.join(' · ');
+    nudgeEl.classList.add('show');
+  }
+
   function renderLifeLog(){
     updateLifeLogCategoryOptions();
+    updateLifeLogNudge();
     if(!lifeLogListEl) return;
     lifeLogListEl.innerHTML = '';
     if(!lifeLogItems.length){
