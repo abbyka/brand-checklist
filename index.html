@@ -184,8 +184,11 @@
   .life-log-status.tier-soon{color:var(--accent);font-weight:600;}
   .life-log-status.tier-overdue{color:var(--danger);font-weight:700;}
   .life-log-history-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;}
-  .life-log-chip{font-family:var(--font-mono);font-size:10.8px;color:var(--line);background:rgba(51,88,125,.08);padding:2px 8px;border-radius:999px;white-space:nowrap;}
+  .life-log-chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:10.8px;color:var(--line);background:rgba(51,88,125,.08);padding:2px 6px 2px 8px;border-radius:999px;white-space:nowrap;}
   .life-log-chip.latest{color:var(--header-bg);background:rgba(226,154,61,.28);font-weight:700;}
+  .life-log-chip.future{color:var(--line);background:rgba(51,88,125,.14);border:1px dashed var(--line);}
+  .life-log-chip-del{background:none;border:none;padding:0;margin:0;font-size:10px;line-height:1;color:inherit;opacity:.55;cursor:pointer;}
+  .life-log-chip-del:hover{opacity:1;color:var(--danger);}
   .life-log-mark-row{display:flex;gap:6px;max-width:320px;}
   .life-log-mark-date{flex:1;font-family:var(--font-mono);font-size:12px;padding:8px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--ink);min-width:0;}
   .life-log-mark-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--accent);color:var(--header-bg);border:none;border-radius:8px;padding:8px 14px;cursor:pointer;flex-shrink:0;}
@@ -1219,10 +1222,18 @@
     return 'life_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
   }
 
+  function splitLifeLogHistory(item){
+    var hist = (item.history || []).slice().sort();
+    var today = todayISO();
+    var past = hist.filter(function(d){ return d <= today; });
+    var future = hist.filter(function(d){ return d > today; });
+    return {past: past, future: future};
+  }
+
   function lifeLogStatus(item){
-    var hist = item.history || [];
-    if(!hist.length) return {text:'未做過', tier:'none'};
-    var last = hist[hist.length-1];
+    var past = splitLifeLogHistory(item).past;
+    if(!past.length) return {text:'未做過', tier:'none'};
+    var last = past[past.length-1];
     var since = daysBetween(last, todayISO());
     if(since < 0) since = 0;
     var base = '上次:' + niceDate(last) + '(' + since + '日前)';
@@ -1235,6 +1246,15 @@
     var warnZone = Math.max(1, Math.round(item.cadenceDays * 0.3));
     if(remain <= warnZone) return {text: base + ' · 仲有 ' + remain + ' 日', tier:'soon'};
     return {text: base, tier:'ok'};
+  }
+
+  function lifeLogNextPlanned(item){
+    var future = splitLifeLogHistory(item).future;
+    if(!future.length) return null;
+    var next = future[0];
+    var days = daysBetween(todayISO(), next);
+    var text = days === 0 ? ('下次:' + niceDate(next) + '(今日!)') : ('下次:' + niceDate(next) + '(仲有 ' + days + ' 日)');
+    return {text: text, tier: days <= 3 ? 'soon' : 'ok', date: next};
   }
 
   function lifeLogCategories(){
@@ -1264,8 +1284,11 @@
     var overdue = [], soon = [];
     lifeLogItems.forEach(function(item){
       var s = lifeLogStatus(item);
-      if(s.tier === 'overdue') overdue.push(item.label);
-      else if(s.tier === 'soon') soon.push(item.label);
+      var next = lifeLogNextPlanned(item);
+      var isOverdue = s.tier === 'overdue';
+      var isSoon = s.tier === 'soon' || (next && next.tier === 'soon');
+      if(isOverdue) overdue.push(item.label);
+      else if(isSoon) soon.push(item.label);
     });
     if(!overdue.length && !soon.length){
       nudgeEl.classList.remove('show');
@@ -1295,24 +1318,35 @@
       li.className = 'life-log-item';
       li.dataset.id = item.id;
       var status = lifeLogStatus(item);
-      var hist = (item.history || []).slice().reverse();
+      var next = lifeLogNextPlanned(item);
+      var split = splitLifeLogHistory(item);
+      var futureSet = {};
+      split.future.forEach(function(d){ futureSet[d] = true; });
+      var hist = (item.history || []).slice().sort().reverse();
       var chipsHtml = hist.length ?
         ('<div class="life-log-history-chips">' + hist.map(function(d, i){
-          return '<span class="life-log-chip' + (i===0?' latest':'') + '">' + niceDate(d) + '</span>';
+          var isFuture = !!futureSet[d];
+          var isLatestPast = !isFuture && split.past.length && d === split.past[split.past.length-1];
+          return '<span class="life-log-chip' + (isFuture?' future':'') + (isLatestPast?' latest':'') + '" data-date="' + d + '">' +
+            niceDate(d) +
+            '<button type="button" class="life-log-chip-del" data-date="' + d + '" title="刪除呢個記錄">✕</button>' +
+          '</span>';
         }).join('') + '</div>') : '';
       var cadenceLabel = CADENCE_LABELS[item.cadenceDays] || '';
       var badges = '';
       if(item.category) badges += ' <span class="freq-pill">' + escapeHtml(item.category) + '</span>';
       if(cadenceLabel) badges += ' <span class="freq-pill">' + cadenceLabel + '</span>';
+      var nextHtml = next ? ('<div class="life-log-status tier-' + next.tier + '">' + next.text + '</div>') : '';
       li.innerHTML =
         '<div class="life-log-row-head">' +
           '<span class="life-log-name"><span class="life-log-num">' + (idx+1) + '.</span>' + escapeHtml(item.label) + badges + '</span>' +
           '<button type="button" class="life-log-del" title="刪除">✕</button>' +
         '</div>' +
         '<div class="life-log-status' + (status.tier==='soon'?' tier-soon':status.tier==='overdue'?' tier-overdue':'') + '">' + status.text + '</div>' +
+        nextHtml +
         chipsHtml +
         '<div class="life-log-mark-row">' +
-          '<input type="date" class="life-log-mark-date" max="' + todayISO() + '" value="' + todayISO() + '">' +
+          '<input type="date" class="life-log-mark-date" value="' + todayISO() + '" title="填今日或之前=記錄已做;填之後嘅日子=set做下次提醒">' +
           '<button type="button" class="life-log-mark-btn">+ 記錄</button>' +
         '</div>';
       lifeLogListEl.appendChild(li);
@@ -1322,6 +1356,9 @@
         markLifeLogDate(item.id, dateVal);
       });
       li.querySelector('.life-log-del').addEventListener('click', function(){ deleteLifeLogItem(item.id); });
+      li.querySelectorAll('.life-log-chip-del').forEach(function(btn){
+        btn.addEventListener('click', function(){ removeLifeLogDate(item.id, btn.dataset.date); });
+      });
     });
   }
 
@@ -1348,6 +1385,18 @@
     if(sbClient){
       sbClient.from('life_logs').update({history:item.history}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
         if(res && res.error){ console.error('life log mark error', res.error); }
+      });
+    }
+  }
+
+  function removeLifeLogDate(id, dateStr){
+    var item = lifeLogItems.filter(function(x){ return x.id === id; })[0];
+    if(!item) return;
+    item.history = (item.history || []).filter(function(d){ return d !== dateStr; });
+    renderLifeLog();
+    if(sbClient){
+      sbClient.from('life_logs').update({history:item.history}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('life log remove date error', res.error); }
       });
     }
   }
