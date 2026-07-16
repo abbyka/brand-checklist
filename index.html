@@ -156,10 +156,39 @@
   .todo-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .todo-del:hover{color:var(--danger);}
   .todo-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;}
+  .todo-done-toggle{margin-top:10px;padding-top:9px;border-top:1px dashed var(--card-border);font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);cursor:pointer;user-select:none;}
+  .todo-done-toggle:hover{color:var(--ink);}
+  .todo-done-chevron{display:inline-block;transition:transform .15s ease;}
+  .todo-done-toggle.expanded .todo-done-chevron{transform:rotate(90deg);}
+  .todo-done-list{list-style:none;margin:6px 0 0;padding:0;}
+  .todo-done-list.hidden{display:none;}
 
   .todo-undo-toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:50;width:min(92vw,420px);}
   .todo-undo-toast{background:var(--header-bg);color:var(--header-ink);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.22);}
   .todo-undo-toast button{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;padding:4px 8px;flex-shrink:0;}
+
+  .life-log-section{padding:36px 20px 0;}
+  .life-log-head{max-width:900px;margin:0 auto 16px;}
+  .life-log-add-row{display:flex;gap:8px;flex-wrap:wrap;max-width:900px;margin:0 auto 18px;}
+  .life-log-add-text{flex:1 1 200px;font-family:var(--font-cjk);font-size:13px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
+  .life-log-add-cadence{font-family:var(--font-mono);font-size:12.5px;padding:9px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
+  .life-log-add-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--header-bg);color:var(--header-ink);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;}
+  .life-log-add-btn:hover{opacity:.88;}
+  .life-log-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;max-width:900px;margin:0 auto;}
+  .life-log-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;}
+  .life-log-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
+  .life-log-name{font-weight:700;font-size:15px;color:var(--ink);}
+  .life-log-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
+  .life-log-del:hover{color:var(--danger);}
+  .life-log-status{font-family:var(--font-mono);font-size:11.8px;color:var(--ink-soft);margin-bottom:6px;}
+  .life-log-status.tier-soon{color:var(--accent);font-weight:600;}
+  .life-log-status.tier-overdue{color:var(--danger);font-weight:700;}
+  .life-log-history-toggle{align-self:flex-start;background:none;border:none;padding:0;font-family:var(--font-mono);font-size:11px;color:var(--line);text-decoration:underline;cursor:pointer;margin-bottom:8px;}
+  .life-log-history{font-size:11.5px;color:var(--ink-soft);margin:0 0 10px;}
+  .life-log-history.hidden{display:none;}
+  .life-log-mark-btn{margin-top:auto;font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--accent);color:var(--header-bg);border:none;border-radius:8px;padding:9px 0;cursor:pointer;}
+  .life-log-mark-btn:hover{opacity:.88;}
+  .life-log-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;grid-column:1/-1;}
 
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important;animation:none !important;}
@@ -181,6 +210,8 @@
     .todo-filter-row{margin:0 0 14px;}
     .todo-filter-btn{font-size:11px;padding:6px 12px;}
     .todo-col{padding:13px;min-width:0;}
+    .life-log-section{padding:24px 12px 0;}
+    .life-log-list{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -244,6 +275,31 @@
       <button class="todo-filter-btn" data-filter="waiting" type="button">等回覆</button>
     </div>
     <div class="todo-columns" id="todoColumns"></div>
+  </section>
+
+  <section class="life-log-section" id="lifeLogSection">
+    <div class="life-log-head">
+      <p class="eyebrow eyebrow-dark">PERSONAL · 生活記錄</p>
+      <h2 class="todo-title">日子記錄</h2>
+      <p class="todo-sub">針灸、睇中醫、按摩、Facial、醫美療程、Gym…自己加項目,撳「記錄今日」留底,幫你記得幾時再去做。</p>
+    </div>
+    <div class="life-log-add-row">
+      <input type="text" class="life-log-add-text" placeholder="加新項目,例如:針灸">
+      <select class="life-log-add-cadence">
+        <option value="">唔提醒,淨係記日子</option>
+        <option value="1">每日</option>
+        <option value="3">每幾日</option>
+        <option value="7">每星期</option>
+        <option value="14">每兩星期</option>
+        <option value="21">每3星期</option>
+        <option value="30">每月</option>
+        <option value="90">每幾個月</option>
+        <option value="182">每半年</option>
+        <option value="365">一年</option>
+      </select>
+      <button type="button" class="life-log-add-btn">+ 加項目</button>
+    </div>
+    <div class="life-log-list" id="lifeLogList"></div>
   </section>
 
   <p class="foot">呢版嘅剔選記錄實時共享,自動save落雲端資料庫。跟住個頻率持續做,個 marketing engine 就會一直運轉落去。</p>
@@ -802,6 +858,7 @@
   var todoNames = {p1:'', p2:''};
   var todoChannel = null;
   var todoFilterMode = 'all';
+  var todoDoneExpanded = {p1:false, p2:false};
   var todoColumnsEl = document.getElementById('todoColumns');
   buildTodoColumns();
 
@@ -883,7 +940,22 @@
       listEl.className = 'todo-list';
       col.appendChild(listEl);
 
+      var doneToggle = document.createElement('div');
+      doneToggle.className = 'todo-done-toggle';
+      doneToggle.innerHTML = '<span class="todo-done-chevron">&#9656;</span> 已完成 (<span data-role="done-count">0</span>)';
+      col.appendChild(doneToggle);
+
+      var doneListEl = document.createElement('ul');
+      doneListEl.className = 'todo-done-list hidden';
+      col.appendChild(doneListEl);
+
       todoColumnsEl.appendChild(col);
+
+      doneToggle.addEventListener('click', function(){
+        todoDoneExpanded[slot] = !todoDoneExpanded[slot];
+        doneToggle.classList.toggle('expanded', todoDoneExpanded[slot]);
+        doneListEl.classList.toggle('hidden', !todoDoneExpanded[slot]);
+      });
 
       nameInput.addEventListener('change', function(){ saveTodoName(slot, nameInput.value); });
 
@@ -903,71 +975,92 @@
     });
   }
 
+  function buildTodoLi(item, slot, seqLabel){
+    var li = document.createElement('li');
+    li.className = 'todo-item' + (item.done ? ' done' : '');
+    li.dataset.id = item.id;
+    var tier = todoTier(item);
+    var numLabel = seqLabel ? ('<span class="todo-num">' + seqLabel + '.</span>') : '';
+    var pillClass = 'todo-deadline-pill' + (tier==='soon'?' tier-soon':tier==='overdue'?' tier-overdue':(!item.deadline?' tier-none':''));
+    var pillText = item.deadline ? todoDeadlineText(item) : '+ 加死線';
+    var deadlineHtml =
+      '<label class="todo-deadline-wrap">' +
+        '<span class="' + pillClass + '">' + pillText + '</span>' +
+        '<input type="date" class="todo-deadline-input" value="' + (item.deadline || '') + '">' +
+      '</label>';
+    li.innerHTML =
+      '<input type="checkbox" class="todo-chk"' + (item.done?' checked':'') + '>' +
+      '<span class="todo-main"><span class="todo-text">' + numLabel + escapeHtml(item.task) + '</span><br>' + deadlineHtml + '</span>' +
+      '<button type="button" class="todo-wait-btn' + (item.waiting?' active':'') + '" title="等緊回覆">⏳</button>' +
+      '<button type="button" class="todo-del" title="刪除">✕</button>';
+
+    li.querySelector('.todo-chk').addEventListener('change', function(e){
+      toggleTodoItem(slot, item.id, e.target.checked);
+    });
+    li.querySelector('.todo-deadline-input').addEventListener('change', function(e){
+      updateTodoDeadline(slot, item.id, e.target.value || null);
+    });
+    li.querySelector('.todo-wait-btn').addEventListener('click', function(){
+      toggleTodoWaiting(slot, item.id, !item.waiting);
+    });
+    li.querySelector('.todo-del').addEventListener('click', function(){
+      deleteTodoItem(slot, item.id);
+    });
+    return li;
+  }
+
   function renderTodoColumn(slot){
     var col = todoColumnsEl.querySelector('.todo-col[data-slot="'+slot+'"]');
     if(!col) return;
     var nameInput = col.querySelector('.todo-col-name');
     if(document.activeElement !== nameInput){ nameInput.value = todoNames[slot] || ''; }
     var listEl = col.querySelector('.todo-list');
+    var doneToggle = col.querySelector('.todo-done-toggle');
+    var doneListEl = col.querySelector('.todo-done-list');
     listEl.innerHTML = '';
-    var items = (customTodos[slot] || []).slice().sort(function(a,b){
-      if(!!a.done !== !!b.done) return a.done ? 1 : -1;
+    doneListEl.innerHTML = '';
+
+    var all = (customTodos[slot] || []).slice();
+    var pending = all.filter(function(it){ return !it.done; }).sort(function(a,b){
       if(a.deadline && b.deadline) return a.deadline < b.deadline ? -1 : 1;
       if(a.deadline) return -1;
       if(b.deadline) return 1;
       return 0;
     });
-    if(!items.length){
+    var done = all.filter(function(it){ return it.done; });
+
+    if(!pending.length){
       var empty = document.createElement('li');
       empty.className = 'todo-empty';
       empty.textContent = '仲未有task,打字加一個。';
       listEl.appendChild(empty);
-      return;
+    } else {
+      var seq = 0;
+      var anyVisible = false;
+      pending.forEach(function(item){
+        seq++;
+        var hidden = todoItemHidden(item);
+        if(!hidden) anyVisible = true;
+        var li = buildTodoLi(item, slot, seq);
+        li.classList.toggle('filtered-hide', hidden);
+        listEl.appendChild(li);
+      });
+      if(!anyVisible){
+        var emptyFilter = document.createElement('li');
+        emptyFilter.className = 'todo-empty';
+        emptyFilter.textContent = '呢個篩選下冇嘢。';
+        listEl.appendChild(emptyFilter);
+      }
     }
-    var seq = 0;
-    var anyVisible = false;
-    items.forEach(function(item){
-      var li = document.createElement('li');
-      var hidden = todoItemHidden(item);
-      if(!hidden) anyVisible = true;
-      li.className = 'todo-item' + (item.done ? ' done' : '') + (hidden ? ' filtered-hide' : '');
-      li.dataset.id = item.id;
-      var tier = todoTier(item);
-      var numLabel = '';
-      if(!item.done){ seq++; numLabel = '<span class="todo-num">' + seq + '.</span>'; }
-      var pillClass = 'todo-deadline-pill' + (tier==='soon'?' tier-soon':tier==='overdue'?' tier-overdue':(!item.deadline?' tier-none':''));
-      var pillText = item.deadline ? todoDeadlineText(item) : '+ 加死線';
-      var deadlineHtml =
-        '<label class="todo-deadline-wrap">' +
-          '<span class="' + pillClass + '">' + pillText + '</span>' +
-          '<input type="date" class="todo-deadline-input" value="' + (item.deadline || '') + '">' +
-        '</label>';
-      li.innerHTML =
-        '<input type="checkbox" class="todo-chk"' + (item.done?' checked':'') + '>' +
-        '<span class="todo-main"><span class="todo-text">' + numLabel + escapeHtml(item.task) + '</span><br>' + deadlineHtml + '</span>' +
-        '<button type="button" class="todo-wait-btn' + (item.waiting?' active':'') + '" title="等緊回覆">⏳</button>' +
-        '<button type="button" class="todo-del" title="刪除">✕</button>';
-      listEl.appendChild(li);
 
-      li.querySelector('.todo-chk').addEventListener('change', function(e){
-        toggleTodoItem(slot, item.id, e.target.checked);
-      });
-      li.querySelector('.todo-deadline-input').addEventListener('change', function(e){
-        updateTodoDeadline(slot, item.id, e.target.value || null);
-      });
-      li.querySelector('.todo-wait-btn').addEventListener('click', function(){
-        toggleTodoWaiting(slot, item.id, !item.waiting);
-      });
-      li.querySelector('.todo-del').addEventListener('click', function(){
-        deleteTodoItem(slot, item.id);
-      });
+    doneToggle.querySelector('[data-role="done-count"]').textContent = done.length;
+    doneToggle.style.display = done.length ? '' : 'none';
+    var expanded = !!todoDoneExpanded[slot];
+    doneToggle.classList.toggle('expanded', expanded);
+    doneListEl.classList.toggle('hidden', !expanded);
+    done.forEach(function(item){
+      doneListEl.appendChild(buildTodoLi(item, slot, ''));
     });
-    if(!anyVisible){
-      var emptyFilter = document.createElement('li');
-      emptyFilter.className = 'todo-empty';
-      emptyFilter.textContent = '呢個篩選下冇嘢。';
-      listEl.appendChild(emptyFilter);
-    }
   }
 
   function renderAllTodos(){
@@ -1131,6 +1224,192 @@
       renderAllTodos();
     });
     subscribeTodoRealtime();
+    loadLifeLogData();
+  }
+
+  var CADENCE_LABELS = {1:'每日',3:'每幾日',7:'每星期',14:'每兩星期',21:'每3星期',30:'每月',90:'每幾個月',182:'每半年',365:'一年'};
+  var lifeLogItems = [];
+  var lifeLogChannel = null;
+  var lifeLogListEl = document.getElementById('lifeLogList');
+
+  function genLifeLogId(){
+    return 'life_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  function lifeLogStatus(item){
+    var hist = item.history || [];
+    if(!hist.length) return {text:'未做過', tier:'none'};
+    var last = hist[hist.length-1];
+    var since = daysBetween(last, todayISO());
+    if(since < 0) since = 0;
+    var base = '上次:' + niceDate(last) + '(' + since + '日前)';
+    if(!item.cadenceDays) return {text:base, tier:'none'};
+    if(since >= item.cadenceDays){
+      var over = since - item.cadenceDays;
+      return {text: (over > 0 ? '已過期 ' + over + ' 日 · ' : '今日到期 · ') + base, tier:'overdue'};
+    }
+    var remain = item.cadenceDays - since;
+    var warnZone = Math.max(1, Math.round(item.cadenceDays * 0.3));
+    if(remain <= warnZone) return {text: base + ' · 仲有 ' + remain + ' 日', tier:'soon'};
+    return {text: base, tier:'ok'};
+  }
+
+  function renderLifeLog(){
+    if(!lifeLogListEl) return;
+    lifeLogListEl.innerHTML = '';
+    if(!lifeLogItems.length){
+      var empty = document.createElement('div');
+      empty.className = 'life-log-empty';
+      empty.textContent = '仲未有項目,喺上面打個名加一個(例如:針灸)。';
+      lifeLogListEl.appendChild(empty);
+      return;
+    }
+    lifeLogItems.forEach(function(item){
+      var card = document.createElement('div');
+      card.className = 'life-log-card';
+      card.dataset.id = item.id;
+      var status = lifeLogStatus(item);
+      var hist = (item.history || []).slice().reverse();
+      var histText = hist.length ? ('最近 3 次:<br>' + hist.slice(0,3).map(niceDate).join('、')) : '仲未有記錄。';
+      var cadenceLabel = CADENCE_LABELS[item.cadenceDays] || '';
+      card.innerHTML =
+        '<div class="life-log-card-head">' +
+          '<span class="life-log-name">' + escapeHtml(item.label) + (cadenceLabel ? ' <span class="freq-pill">' + cadenceLabel + '</span>' : '') + '</span>' +
+          '<button type="button" class="life-log-del" title="刪除">✕</button>' +
+        '</div>' +
+        '<div class="life-log-status' + (status.tier==='soon'?' tier-soon':status.tier==='overdue'?' tier-overdue':'') + '">' + status.text + '</div>' +
+        '<button type="button" class="life-log-history-toggle">歷史</button>' +
+        '<div class="life-log-history hidden">' + histText + '</div>' +
+        '<button type="button" class="life-log-mark-btn">✓ 記錄今日</button>';
+      lifeLogListEl.appendChild(card);
+
+      card.querySelector('.life-log-mark-btn').addEventListener('click', function(){ markLifeLogToday(item.id); });
+      card.querySelector('.life-log-del').addEventListener('click', function(){ deleteLifeLogItem(item.id); });
+      card.querySelector('.life-log-history-toggle').addEventListener('click', function(){
+        card.querySelector('.life-log-history').classList.toggle('hidden');
+      });
+    });
+  }
+
+  function addLifeLogItem(label, cadenceDays){
+    var item = {id: genLifeLogId(), label:label, cadenceDays: cadenceDays || null, history: []};
+    lifeLogItems.push(item);
+    renderLifeLog();
+    if(sbClient){
+      sbClient.from('life_logs').insert({
+        id:item.id, business_id: currentBusiness, label:label, cadence_days:item.cadenceDays, history: []
+      }).then(function(res){ if(res && res.error){ console.error('life log insert error', res.error); } });
+    }
+  }
+
+  function markLifeLogToday(id){
+    var item = lifeLogItems.filter(function(x){ return x.id === id; })[0];
+    if(!item) return;
+    var today = todayISO();
+    if(item.history[item.history.length-1] !== today){ item.history.push(today); }
+    renderLifeLog();
+    if(sbClient){
+      sbClient.from('life_logs').update({history:item.history}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
+        if(res && res.error){ console.error('life log mark error', res.error); }
+      });
+    }
+  }
+
+  var LIFE_LOG_UNDO_MS = 8000;
+
+  function deleteLifeLogItem(id){
+    var idx = lifeLogItems.findIndex(function(x){ return x.id === id; });
+    if(idx === -1) return;
+    var item = lifeLogItems[idx];
+    lifeLogItems.splice(idx, 1);
+    renderLifeLog();
+    showLifeLogUndoToast(item, currentBusiness);
+  }
+
+  function showLifeLogUndoToast(item, businessAtDelete){
+    var container = document.getElementById('todoUndoToasts');
+    if(!container){ finalizeLifeLogDelete(item.id, businessAtDelete); return; }
+    var toast = document.createElement('div');
+    toast.className = 'todo-undo-toast';
+    toast.innerHTML = '<span>已刪除「' + escapeHtml(item.label) + '」</span><button type="button">撤回</button>';
+    container.appendChild(toast);
+    var timeoutId = setTimeout(function(){
+      if(toast.parentNode) toast.parentNode.removeChild(toast);
+      finalizeLifeLogDelete(item.id, businessAtDelete);
+    }, LIFE_LOG_UNDO_MS);
+    toast.querySelector('button').addEventListener('click', function(){
+      clearTimeout(timeoutId);
+      if(toast.parentNode) toast.parentNode.removeChild(toast);
+      if(currentBusiness === businessAtDelete){
+        lifeLogItems.push(item);
+        renderLifeLog();
+      }
+    });
+  }
+
+  function finalizeLifeLogDelete(id, businessAtDelete){
+    if(!sbClient) return;
+    sbClient.from('life_logs').delete().eq('id', id).eq('business_id', businessAtDelete).then(function(res){
+      if(res && res.error){ console.error('life log delete error', res.error); }
+    });
+  }
+
+  function applyLifeLogRowChange(payload){
+    if(payload.eventType === 'DELETE'){
+      var oldId = payload.old && payload.old.id;
+      lifeLogItems = lifeLogItems.filter(function(x){ return x.id !== oldId; });
+      renderLifeLog();
+      return;
+    }
+    var row = payload.new;
+    if(!row) return;
+    var idx = lifeLogItems.findIndex(function(x){ return x.id === row.id; });
+    var newItem = {id:row.id, label:row.label, cadenceDays:row.cadence_days, history: row.history || []};
+    if(idx === -1){ lifeLogItems.push(newItem); } else { lifeLogItems[idx] = newItem; }
+    renderLifeLog();
+  }
+
+  function subscribeLifeLogRealtime(){
+    if(!sbClient) return;
+    if(lifeLogChannel){ sbClient.removeChannel(lifeLogChannel); lifeLogChannel = null; }
+    lifeLogChannel = sbClient
+      .channel('life-log-changes-' + currentBusiness)
+      .on('postgres_changes', {
+        event:'*', schema:'public', table:'life_logs',
+        filter:'business_id=eq.' + currentBusiness
+      }, function(payload){ applyLifeLogRowChange(payload); })
+      .subscribe();
+  }
+
+  function loadLifeLogData(){
+    if(!sbClient){ renderLifeLog(); return; }
+    lifeLogItems = [];
+    sbClient.from('life_logs').select('*').eq('business_id', currentBusiness).then(function(res){
+      if(res && res.data){
+        lifeLogItems = res.data.map(function(row){
+          return {id:row.id, label:row.label, cadenceDays:row.cadence_days, history: row.history || []};
+        }).sort(function(a,b){ return (a.label||'').localeCompare(b.label||''); });
+      }
+      renderLifeLog();
+    });
+    subscribeLifeLogRealtime();
+  }
+
+  var lifeLogAddText = document.querySelector('.life-log-add-text');
+  var lifeLogAddCadence = document.querySelector('.life-log-add-cadence');
+  var lifeLogAddBtn = document.querySelector('.life-log-add-btn');
+  if(lifeLogAddBtn){
+    lifeLogAddBtn.addEventListener('click', function(){
+      var label = lifeLogAddText.value.trim();
+      if(!label) return;
+      var cadenceVal = lifeLogAddCadence.value ? parseInt(lifeLogAddCadence.value, 10) : null;
+      addLifeLogItem(label, cadenceVal);
+      lifeLogAddText.value = '';
+      lifeLogAddCadence.value = '';
+    });
+    lifeLogAddText.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ lifeLogAddBtn.click(); }
+    });
   }
 
   function applyRowToState(row){
@@ -1188,11 +1467,13 @@
     var isTodoBiz = (id === 'todo_list');
     var marketingOnlyEl = document.getElementById('marketingOnly');
     var todoSectionEl = document.getElementById('todoSection');
+    var lifeLogSectionEl = document.getElementById('lifeLogSection');
     var h1El = document.getElementById('heroH1');
     var subEl = document.getElementById('heroSub');
     if(marketingOnlyEl) marketingOnlyEl.style.display = isTodoBiz ? 'none' : '';
     if(categoriesEl) categoriesEl.style.display = isTodoBiz ? 'none' : '';
     if(todoSectionEl) todoSectionEl.style.display = isTodoBiz ? '' : 'none';
+    if(lifeLogSectionEl) lifeLogSectionEl.style.display = isTodoBiz ? '' : 'none';
     if(h1El) h1El.innerHTML = isTodoBiz ? TODO_H1 : MARKETING_H1;
     if(subEl) subEl.innerHTML = isTodoBiz ? TODO_SUB : MARKETING_SUB;
   }
