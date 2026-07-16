@@ -156,12 +156,6 @@
   .todo-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .todo-del:hover{color:var(--danger);}
   .todo-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;}
-  .todo-done-toggle{margin-top:10px;padding-top:9px;border-top:1px dashed var(--card-border);font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);cursor:pointer;user-select:none;}
-  .todo-done-toggle:hover{color:var(--ink);}
-  .todo-done-chevron{display:inline-block;transition:transform .15s ease;}
-  .todo-done-toggle.expanded .todo-done-chevron{transform:rotate(90deg);}
-  .todo-done-list{list-style:none;margin:6px 0 0;padding:0;}
-  .todo-done-list.hidden{display:none;}
 
   .todo-undo-toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:50;width:min(92vw,420px);}
   .todo-undo-toast{background:var(--header-bg);color:var(--header-ink);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.22);}
@@ -172,8 +166,14 @@
   .life-log-add-row{display:flex;gap:8px;flex-wrap:wrap;max-width:900px;margin:0 auto 18px;}
   .life-log-add-text{flex:1 1 200px;font-family:var(--font-cjk);font-size:13px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
   .life-log-add-cadence{font-family:var(--font-mono);font-size:12.5px;padding:9px 10px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
+  .life-log-add-category{flex:0 1 140px;font-family:var(--font-cjk);font-size:13px;padding:9px 12px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
+  .life-log-add-date{font-family:var(--font-mono);font-size:12px;padding:9px 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
   .life-log-add-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--header-bg);color:var(--header-ink);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;}
   .life-log-add-btn:hover{opacity:.88;}
+  .life-log-cat-row{display:flex;gap:8px;flex-wrap:wrap;max-width:900px;margin:0 auto 16px;}
+  .life-log-cat-row:empty{display:none;}
+  .life-log-cat-btn{font-family:var(--font-mono);font-size:12px;background:rgba(27,51,88,.06);border:1px solid var(--card-border);color:var(--ink-soft);padding:7px 14px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s;}
+  .life-log-cat-btn.active{background:var(--accent);border-color:var(--accent);color:var(--header-bg);font-weight:700;}
   .life-log-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;max-width:900px;margin:0 auto;}
   .life-log-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;}
   .life-log-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;}
@@ -186,7 +186,9 @@
   .life-log-history-toggle{align-self:flex-start;background:none;border:none;padding:0;font-family:var(--font-mono);font-size:11px;color:var(--line);text-decoration:underline;cursor:pointer;margin-bottom:8px;}
   .life-log-history{font-size:11.5px;color:var(--ink-soft);margin:0 0 10px;}
   .life-log-history.hidden{display:none;}
-  .life-log-mark-btn{margin-top:auto;font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--accent);color:var(--header-bg);border:none;border-radius:8px;padding:9px 0;cursor:pointer;}
+  .life-log-mark-row{margin-top:auto;display:flex;gap:6px;}
+  .life-log-mark-date{flex:1;font-family:var(--font-mono);font-size:12px;padding:8px;border:1px solid var(--card-border);border-radius:8px;background:var(--bg);color:var(--ink);min-width:0;}
+  .life-log-mark-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--accent);color:var(--header-bg);border:none;border-radius:8px;padding:8px 14px;cursor:pointer;flex-shrink:0;}
   .life-log-mark-btn:hover{opacity:.88;}
   .life-log-empty{font-size:12.5px;color:var(--ink-soft);padding:8px 0;grid-column:1/-1;}
 
@@ -273,6 +275,7 @@
       <button class="todo-filter-btn" data-filter="soon" type="button">就快過期</button>
       <button class="todo-filter-btn" data-filter="overdue" type="button">已過期</button>
       <button class="todo-filter-btn" data-filter="waiting" type="button">等回覆</button>
+      <button class="todo-filter-btn" data-filter="done" type="button">已完成</button>
     </div>
     <div class="todo-columns" id="todoColumns"></div>
   </section>
@@ -285,6 +288,7 @@
     </div>
     <div class="life-log-add-row">
       <input type="text" class="life-log-add-text" placeholder="加新項目,例如:針灸">
+      <input type="text" class="life-log-add-category" placeholder="類別(可選,例如:醫美)">
       <select class="life-log-add-cadence">
         <option value="">唔提醒,淨係記日子</option>
         <option value="1">每日</option>
@@ -297,8 +301,10 @@
         <option value="182">每半年</option>
         <option value="365">一年</option>
       </select>
+      <input type="date" class="life-log-add-date" title="上次已經做嘅日子(可選,唔填就當未做過)">
       <button type="button" class="life-log-add-btn">+ 加項目</button>
     </div>
+    <div class="life-log-cat-row" id="lifeLogCatRow"></div>
     <div class="life-log-list" id="lifeLogList"></div>
   </section>
 
@@ -858,7 +864,6 @@
   var todoNames = {p1:'', p2:''};
   var todoChannel = null;
   var todoFilterMode = 'all';
-  var todoDoneExpanded = {p1:false, p2:false};
   var todoColumnsEl = document.getElementById('todoColumns');
   buildTodoColumns();
 
@@ -897,6 +902,7 @@
   }
   function todoItemHidden(item){
     if(todoFilterMode === 'all') return false;
+    if(todoFilterMode === 'done') return !item.done;
     if(todoFilterMode === 'waiting') return !item.waiting || item.done;
     if(item.done) return true;
     var t = todoDueTier(item);
@@ -940,22 +946,7 @@
       listEl.className = 'todo-list';
       col.appendChild(listEl);
 
-      var doneToggle = document.createElement('div');
-      doneToggle.className = 'todo-done-toggle';
-      doneToggle.innerHTML = '<span class="todo-done-chevron">&#9656;</span> 已完成 (<span data-role="done-count">0</span>)';
-      col.appendChild(doneToggle);
-
-      var doneListEl = document.createElement('ul');
-      doneListEl.className = 'todo-done-list hidden';
-      col.appendChild(doneListEl);
-
       todoColumnsEl.appendChild(col);
-
-      doneToggle.addEventListener('click', function(){
-        todoDoneExpanded[slot] = !todoDoneExpanded[slot];
-        doneToggle.classList.toggle('expanded', todoDoneExpanded[slot]);
-        doneListEl.classList.toggle('hidden', !todoDoneExpanded[slot]);
-      });
 
       nameInput.addEventListener('change', function(){ saveTodoName(slot, nameInput.value); });
 
@@ -1015,52 +1006,41 @@
     var nameInput = col.querySelector('.todo-col-name');
     if(document.activeElement !== nameInput){ nameInput.value = todoNames[slot] || ''; }
     var listEl = col.querySelector('.todo-list');
-    var doneToggle = col.querySelector('.todo-done-toggle');
-    var doneListEl = col.querySelector('.todo-done-list');
     listEl.innerHTML = '';
-    doneListEl.innerHTML = '';
 
-    var all = (customTodos[slot] || []).slice();
-    var pending = all.filter(function(it){ return !it.done; }).sort(function(a,b){
+    var items = (customTodos[slot] || []).slice().sort(function(a,b){
+      if(!!a.done !== !!b.done) return a.done ? 1 : -1;
       if(a.deadline && b.deadline) return a.deadline < b.deadline ? -1 : 1;
       if(a.deadline) return -1;
       if(b.deadline) return 1;
       return 0;
     });
-    var done = all.filter(function(it){ return it.done; });
 
-    if(!pending.length){
+    if(!items.length){
       var empty = document.createElement('li');
       empty.className = 'todo-empty';
       empty.textContent = '仲未有task,打字加一個。';
       listEl.appendChild(empty);
-    } else {
-      var seq = 0;
-      var anyVisible = false;
-      pending.forEach(function(item){
-        seq++;
-        var hidden = todoItemHidden(item);
-        if(!hidden) anyVisible = true;
-        var li = buildTodoLi(item, slot, seq);
-        li.classList.toggle('filtered-hide', hidden);
-        listEl.appendChild(li);
-      });
-      if(!anyVisible){
-        var emptyFilter = document.createElement('li');
-        emptyFilter.className = 'todo-empty';
-        emptyFilter.textContent = '呢個篩選下冇嘢。';
-        listEl.appendChild(emptyFilter);
-      }
+      return;
     }
 
-    doneToggle.querySelector('[data-role="done-count"]').textContent = done.length;
-    doneToggle.style.display = done.length ? '' : 'none';
-    var expanded = !!todoDoneExpanded[slot];
-    doneToggle.classList.toggle('expanded', expanded);
-    doneListEl.classList.toggle('hidden', !expanded);
-    done.forEach(function(item){
-      doneListEl.appendChild(buildTodoLi(item, slot, ''));
+    var seq = 0;
+    var anyVisible = false;
+    items.forEach(function(item){
+      var hidden = todoItemHidden(item);
+      if(!hidden) anyVisible = true;
+      var numLabel = '';
+      if(!item.done){ seq++; numLabel = seq; }
+      var li = buildTodoLi(item, slot, numLabel);
+      li.classList.toggle('filtered-hide', hidden);
+      listEl.appendChild(li);
     });
+    if(!anyVisible){
+      var emptyFilter = document.createElement('li');
+      emptyFilter.className = 'todo-empty';
+      emptyFilter.textContent = '呢個篩選下冇嘢。';
+      listEl.appendChild(emptyFilter);
+    }
   }
 
   function renderAllTodos(){
@@ -1230,7 +1210,9 @@
   var CADENCE_LABELS = {1:'每日',3:'每幾日',7:'每星期',14:'每兩星期',21:'每3星期',30:'每月',90:'每幾個月',182:'每半年',365:'一年'};
   var lifeLogItems = [];
   var lifeLogChannel = null;
+  var lifeLogCatFilter = 'all';
   var lifeLogListEl = document.getElementById('lifeLogList');
+  var lifeLogCatRowEl = document.getElementById('lifeLogCatRow');
 
   function genLifeLogId(){
     return 'life_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
@@ -1254,17 +1236,49 @@
     return {text: base, tier:'ok'};
   }
 
+  function lifeLogCategories(){
+    var set = {};
+    lifeLogItems.forEach(function(it){ if(it.category) set[it.category] = true; });
+    return Object.keys(set).sort();
+  }
+
+  function renderLifeLogCatTabs(){
+    if(!lifeLogCatRowEl) return;
+    var cats = lifeLogCategories();
+    if(!cats.length){
+      lifeLogCatRowEl.innerHTML = '';
+      lifeLogCatFilter = 'all';
+      return;
+    }
+    if(lifeLogCatFilter !== 'all' && cats.indexOf(lifeLogCatFilter) === -1){ lifeLogCatFilter = 'all'; }
+    var html = '<button type="button" class="life-log-cat-btn' + (lifeLogCatFilter==='all'?' active':'') + '" data-cat="all">全部</button>';
+    cats.forEach(function(c){
+      html += '<button type="button" class="life-log-cat-btn' + (lifeLogCatFilter===c?' active':'') + '" data-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + '</button>';
+    });
+    lifeLogCatRowEl.innerHTML = html;
+    lifeLogCatRowEl.querySelectorAll('.life-log-cat-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        lifeLogCatFilter = btn.dataset.cat;
+        renderLifeLog();
+      });
+    });
+  }
+
   function renderLifeLog(){
+    renderLifeLogCatTabs();
     if(!lifeLogListEl) return;
     lifeLogListEl.innerHTML = '';
-    if(!lifeLogItems.length){
+    var visibleItems = lifeLogItems.filter(function(it){
+      return lifeLogCatFilter === 'all' || it.category === lifeLogCatFilter;
+    });
+    if(!visibleItems.length){
       var empty = document.createElement('div');
       empty.className = 'life-log-empty';
-      empty.textContent = '仲未有項目,喺上面打個名加一個(例如:針灸)。';
+      empty.textContent = lifeLogItems.length ? '呢個類別下冇項目。' : '仲未有項目,喺上面打個名加一個(例如:針灸)。';
       lifeLogListEl.appendChild(empty);
       return;
     }
-    lifeLogItems.forEach(function(item){
+    visibleItems.forEach(function(item){
       var card = document.createElement('div');
       card.className = 'life-log-card';
       card.dataset.id = item.id;
@@ -1272,18 +1286,27 @@
       var hist = (item.history || []).slice().reverse();
       var histText = hist.length ? ('最近 3 次:<br>' + hist.slice(0,3).map(niceDate).join('、')) : '仲未有記錄。';
       var cadenceLabel = CADENCE_LABELS[item.cadenceDays] || '';
+      var badges = '';
+      if(item.category) badges += ' <span class="freq-pill">' + escapeHtml(item.category) + '</span>';
+      if(cadenceLabel) badges += ' <span class="freq-pill">' + cadenceLabel + '</span>';
       card.innerHTML =
         '<div class="life-log-card-head">' +
-          '<span class="life-log-name">' + escapeHtml(item.label) + (cadenceLabel ? ' <span class="freq-pill">' + cadenceLabel + '</span>' : '') + '</span>' +
+          '<span class="life-log-name">' + escapeHtml(item.label) + badges + '</span>' +
           '<button type="button" class="life-log-del" title="刪除">✕</button>' +
         '</div>' +
         '<div class="life-log-status' + (status.tier==='soon'?' tier-soon':status.tier==='overdue'?' tier-overdue':'') + '">' + status.text + '</div>' +
         '<button type="button" class="life-log-history-toggle">歷史</button>' +
         '<div class="life-log-history hidden">' + histText + '</div>' +
-        '<button type="button" class="life-log-mark-btn">✓ 記錄今日</button>';
+        '<div class="life-log-mark-row">' +
+          '<input type="date" class="life-log-mark-date" value="' + todayISO() + '">' +
+          '<button type="button" class="life-log-mark-btn">+ 記錄</button>' +
+        '</div>';
       lifeLogListEl.appendChild(card);
 
-      card.querySelector('.life-log-mark-btn').addEventListener('click', function(){ markLifeLogToday(item.id); });
+      card.querySelector('.life-log-mark-btn').addEventListener('click', function(){
+        var dateVal = card.querySelector('.life-log-mark-date').value || todayISO();
+        markLifeLogDate(item.id, dateVal);
+      });
       card.querySelector('.life-log-del').addEventListener('click', function(){ deleteLifeLogItem(item.id); });
       card.querySelector('.life-log-history-toggle').addEventListener('click', function(){
         card.querySelector('.life-log-history').classList.toggle('hidden');
@@ -1291,22 +1314,25 @@
     });
   }
 
-  function addLifeLogItem(label, cadenceDays){
-    var item = {id: genLifeLogId(), label:label, cadenceDays: cadenceDays || null, history: []};
+  function addLifeLogItem(label, cadenceDays, category, initialDate){
+    var history = initialDate ? [initialDate] : [];
+    var item = {id: genLifeLogId(), label:label, cadenceDays: cadenceDays || null, category: category || null, history: history};
     lifeLogItems.push(item);
     renderLifeLog();
     if(sbClient){
       sbClient.from('life_logs').insert({
-        id:item.id, business_id: currentBusiness, label:label, cadence_days:item.cadenceDays, history: []
+        id:item.id, business_id: currentBusiness, label:label, cadence_days:item.cadenceDays, category:item.category, history: history
       }).then(function(res){ if(res && res.error){ console.error('life log insert error', res.error); } });
     }
   }
 
-  function markLifeLogToday(id){
+  function markLifeLogDate(id, dateStr){
     var item = lifeLogItems.filter(function(x){ return x.id === id; })[0];
     if(!item) return;
-    var today = todayISO();
-    if(item.history[item.history.length-1] !== today){ item.history.push(today); }
+    if(item.history.indexOf(dateStr) === -1){
+      item.history.push(dateStr);
+      item.history.sort();
+    }
     renderLifeLog();
     if(sbClient){
       sbClient.from('life_logs').update({history:item.history}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
@@ -1364,7 +1390,7 @@
     var row = payload.new;
     if(!row) return;
     var idx = lifeLogItems.findIndex(function(x){ return x.id === row.id; });
-    var newItem = {id:row.id, label:row.label, cadenceDays:row.cadence_days, history: row.history || []};
+    var newItem = {id:row.id, label:row.label, cadenceDays:row.cadence_days, category:row.category || null, history: row.history || []};
     if(idx === -1){ lifeLogItems.push(newItem); } else { lifeLogItems[idx] = newItem; }
     renderLifeLog();
   }
@@ -1387,7 +1413,7 @@
     sbClient.from('life_logs').select('*').eq('business_id', currentBusiness).then(function(res){
       if(res && res.data){
         lifeLogItems = res.data.map(function(row){
-          return {id:row.id, label:row.label, cadenceDays:row.cadence_days, history: row.history || []};
+          return {id:row.id, label:row.label, cadenceDays:row.cadence_days, category:row.category || null, history: row.history || []};
         }).sort(function(a,b){ return (a.label||'').localeCompare(b.label||''); });
       }
       renderLifeLog();
@@ -1396,16 +1422,22 @@
   }
 
   var lifeLogAddText = document.querySelector('.life-log-add-text');
+  var lifeLogAddCategory = document.querySelector('.life-log-add-category');
   var lifeLogAddCadence = document.querySelector('.life-log-add-cadence');
+  var lifeLogAddDate = document.querySelector('.life-log-add-date');
   var lifeLogAddBtn = document.querySelector('.life-log-add-btn');
   if(lifeLogAddBtn){
     lifeLogAddBtn.addEventListener('click', function(){
       var label = lifeLogAddText.value.trim();
       if(!label) return;
+      var category = lifeLogAddCategory.value.trim() || null;
       var cadenceVal = lifeLogAddCadence.value ? parseInt(lifeLogAddCadence.value, 10) : null;
-      addLifeLogItem(label, cadenceVal);
+      var initialDate = lifeLogAddDate.value || null;
+      addLifeLogItem(label, cadenceVal, category, initialDate);
       lifeLogAddText.value = '';
+      lifeLogAddCategory.value = '';
       lifeLogAddCadence.value = '';
+      lifeLogAddDate.value = '';
     });
     lifeLogAddText.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){ lifeLogAddBtn.click(); }
