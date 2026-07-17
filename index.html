@@ -166,6 +166,8 @@
   .todo-undo-toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:50;width:min(92vw,420px);}
   .todo-undo-toast{background:var(--header-bg);color:var(--header-ink);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.22);}
   .todo-undo-toast button{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer;padding:4px 8px;flex-shrink:0;}
+  .sync-error-toast{background:var(--danger);}
+  .sync-error-toast button{color:#fff;text-decoration:underline;}
 
   .life-log-section{padding:36px 20px 0;}
   .life-log-head{max-width:900px;margin:0 auto 16px;}
@@ -793,7 +795,7 @@
         history: getHistory(id),
         updated_at: new Date().toISOString()
       }).then(function(res){
-        if(res && res.error){ console.error('Supabase upsert error:', res.error); }
+        if(res && res.error){ console.error('Supabase upsert error:', res.error); showSyncErrorToast('剔選記錄'); }
       });
     }catch(e){ console.error(e); }
   }
@@ -859,7 +861,7 @@
     renderAll();
     if(sbClient){
       sbClient.from('checklist_state').delete().eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('Supabase delete error:', res.error); }
+        if(res && res.error){ console.error('Supabase delete error:', res.error); showSyncErrorToast('重置進度'); }
       });
     }
     resetConfirm.classList.add('hidden');
@@ -890,6 +892,21 @@
     var d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+  }
+  function showSyncErrorToast(message){
+    var container = document.getElementById('todoUndoToasts');
+    if(!container) return;
+    var toast = document.createElement('div');
+    toast.className = 'todo-undo-toast sync-error-toast';
+    toast.innerHTML = '<span>⚠ 未存到雲端:' + escapeHtml(message) + '</span><button type="button">知道</button>';
+    container.appendChild(toast);
+    var timeoutId = setTimeout(function(){
+      if(toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 12000);
+    toast.querySelector('button').addEventListener('click', function(){
+      clearTimeout(timeoutId);
+      if(toast.parentNode) toast.parentNode.removeChild(toast);
+    });
   }
   function genTodoId(){
     return 'todo_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
@@ -1064,7 +1081,7 @@
     if(sbClient){
       sbClient.from('custom_todos').insert({
         id:item.id, business_id: currentBusiness, slot:slot, task:text, deadline:item.deadline, done:false, waiting:false
-      }).then(function(res){ if(res && res.error){ console.error('todo insert error', res.error); } });
+      }).then(function(res){ if(res && res.error){ console.error('todo insert error', res.error); showSyncErrorToast('新task「' + text + '」'); } });
     }
   }
 
@@ -1075,7 +1092,7 @@
     renderTodoColumn(slot);
     if(sbClient){
       sbClient.from('custom_todos').update({done:done}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('todo update error', res.error); }
+        if(res && res.error){ console.error('todo update error', res.error); showSyncErrorToast('剔選狀態'); }
       });
     }
   }
@@ -1087,7 +1104,7 @@
     renderTodoColumn(slot);
     if(sbClient){
       sbClient.from('custom_todos').update({deadline:deadline}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('todo deadline update error', res.error); }
+        if(res && res.error){ console.error('todo deadline update error', res.error); showSyncErrorToast('死線'); }
       });
     }
   }
@@ -1099,7 +1116,7 @@
     renderTodoColumn(slot);
     if(sbClient){
       sbClient.from('custom_todos').update({waiting:waiting}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('todo waiting update error', res.error); }
+        if(res && res.error){ console.error('todo waiting update error', res.error); showSyncErrorToast('等回覆狀態'); }
       });
     }
   }
@@ -1144,7 +1161,7 @@
   function finalizeTodoDelete(id, businessAtDelete){
     if(!sbClient) return;
     sbClient.from('custom_todos').delete().eq('id', id).eq('business_id', businessAtDelete).then(function(res){
-      if(res && res.error){ console.error('todo delete error', res.error); }
+      if(res && res.error){ console.error('todo delete error', res.error); showSyncErrorToast('刪除task'); }
     });
   }
 
@@ -1152,7 +1169,7 @@
     todoNames[slot] = name;
     if(sbClient){
       sbClient.from('todo_people').upsert({business_id: currentBusiness, slot:slot, name:name}).then(function(res){
-        if(res && res.error){ console.error('todo name save error', res.error); }
+        if(res && res.error){ console.error('todo name save error', res.error); showSyncErrorToast('個人名'); }
       });
     }
   }
@@ -1376,7 +1393,7 @@
     if(sbClient){
       sbClient.from('life_logs').insert({
         id:item.id, business_id: currentBusiness, label:label, cadence_days:item.cadenceDays, category:item.category, history: history
-      }).then(function(res){ if(res && res.error){ console.error('life log insert error', res.error); } });
+      }).then(function(res){ if(res && res.error){ console.error('life log insert error', res.error); showSyncErrorToast('新項目「' + label + '」'); } });
     }
   }
 
@@ -1390,7 +1407,7 @@
     renderLifeLog();
     if(sbClient){
       sbClient.from('life_logs').update({history:item.history}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('life log mark error', res.error); }
+        if(res && res.error){ console.error('life log mark error', res.error); showSyncErrorToast('記錄日期'); }
       });
     }
   }
@@ -1402,7 +1419,7 @@
     renderLifeLog();
     if(sbClient){
       sbClient.from('life_logs').update({history:item.history}).eq('id', id).eq('business_id', currentBusiness).then(function(res){
-        if(res && res.error){ console.error('life log remove date error', res.error); }
+        if(res && res.error){ console.error('life log remove date error', res.error); showSyncErrorToast('刪除日期記錄'); }
       });
     }
   }
@@ -1442,7 +1459,7 @@
   function finalizeLifeLogDelete(id, businessAtDelete){
     if(!sbClient) return;
     sbClient.from('life_logs').delete().eq('id', id).eq('business_id', businessAtDelete).then(function(res){
-      if(res && res.error){ console.error('life log delete error', res.error); }
+      if(res && res.error){ console.error('life log delete error', res.error); showSyncErrorToast('刪除項目'); }
     });
   }
 
