@@ -870,9 +870,10 @@
   buildDOM();
   renderAll();
 
-  var TODO_SLOTS = ['p1','p2'];
-  var customTodos = {p1:[], p2:[]};
-  var todoNames = {p1:'', p2:''};
+  var TODO_SLOTS = ['p1','p2','p3'];
+  var customTodos = {p1:[], p2:[], p3:[]};
+  var todoNames = {p1:'', p2:'', p3:''};
+  var TODO_SLOT_PLACEHOLDER = {p1:'撳呢度打你個名', p2:'撳呢度打你個名', p3:'共用(兩個人一齊嘅嘢)'};
   var todoChannel = null;
   var todoFilterMode = 'all';
   var todoColumnsEl = document.getElementById('todoColumns');
@@ -957,7 +958,7 @@
       var nameInput = document.createElement('input');
       nameInput.type = 'text';
       nameInput.className = 'todo-col-name';
-      nameInput.placeholder = '撳呢度打你個名';
+      nameInput.placeholder = TODO_SLOT_PLACEHOLDER[slot] || '撳呢度打你個名';
       col.appendChild(nameInput);
 
       var addRow = document.createElement('div');
@@ -1212,8 +1213,8 @@
 
   function loadTodoData(){
     if(!sbClient){ renderAllTodos(); return; }
-    customTodos = {p1:[], p2:[]};
-    todoNames = {p1:'', p2:''};
+    customTodos = {p1:[], p2:[], p3:[]};
+    todoNames = {p1:'', p2:'', p3:''};
     sbClient.from('custom_todos').select('*').eq('business_id', currentBusiness).then(function(res){
       if(res && res.data){
         res.data.forEach(function(row){
