@@ -82,6 +82,14 @@
   .meter{height:5px;border-radius:3px;background:rgba(27,51,88,.12);overflow:hidden;margin-top:7px;}
   .meter i{display:block;height:100%;width:0;background:var(--danger);transition:width .2s,background .2s;}
   .meter-txt{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);margin-top:4px;}
+  .pw-wrap{position:relative;}
+  .pw-wrap input{padding-right:46px;}
+  .pw-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:7px 8px;border-radius:7px;opacity:.45;}
+  .pw-eye:hover{opacity:.85;background:rgba(27,51,88,.07);}
+  .pw-eye.on{opacity:1;background:rgba(226,154,61,.2);}
+  .matchhint{font-family:var(--font-mono);font-size:11px;margin:6px 0 0;min-height:15px;}
+  .matchhint.ok{color:var(--ok);}
+  .matchhint.no{color:var(--danger);}
   .hintshow{background:rgba(226,154,61,.13);border:1px dashed rgba(226,154,61,.6);border-radius:8px;padding:9px 12px;font-size:12.5px;color:#7A5320;margin:0 0 12px;}
   .reccode{font-family:var(--font-mono);font-size:15px;letter-spacing:.06em;background:#fff;border:2px dashed rgba(226,154,61,.75);border-radius:10px;padding:14px 12px;text-align:center;word-break:break-all;color:var(--ink);margin-bottom:10px;line-height:1.9;}
 
@@ -166,14 +174,21 @@
       <p class="desc" id="lockDesc">資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。</p>
 
       <div class="field">
-        <label for="pw1">主密碼</label>
-        <input type="password" id="pw1" autocomplete="current-password">
+        <label for="pw1" id="pw1Label">主密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="pw1" autocomplete="current-password">
+          <button type="button" class="pw-eye" data-for="pw1" title="顯示 / 隱藏密碼">👁</button>
+        </div>
         <div class="meter hidden" id="meterWrap"><i id="meterBar"></i></div>
         <div class="meter-txt hidden" id="meterTxt"></div>
       </div>
       <div class="field hidden" id="pw2Field">
         <label for="pw2">再輸入一次</label>
-        <input type="password" id="pw2" autocomplete="new-password">
+        <div class="pw-wrap">
+          <input type="password" id="pw2" autocomplete="new-password">
+          <button type="button" class="pw-eye" data-for="pw2" title="顯示 / 隱藏密碼">👁</button>
+        </div>
+        <p class="matchhint" id="matchHint"></p>
       </div>
       <div class="field hidden" id="hintField">
         <label for="hintInput">密碼提示（自己睇,可以留白）</label>
@@ -444,6 +459,28 @@
     if(/[^A-Za-z0-9]/.test(p)) s++;
     return Math.min(s, 5);
   }
+  /* 👁 顯示 / 隱藏,等你自己核對有冇打錯 */
+  [].forEach.call(document.querySelectorAll('.pw-eye'), function(btn){
+    btn.addEventListener('click', function(){
+      var f = $(btn.getAttribute('data-for'));
+      var showing = f.type === 'text';
+      f.type = showing ? 'password' : 'text';
+      btn.classList.toggle('on', !showing);
+      btn.textContent = showing ? '👁' : '🙈';
+      f.focus();
+    });
+  });
+
+  /* 兩格夠唔夠夾:即時話你知 */
+  function checkMatch(){
+    var el = $('matchHint');
+    if(pw2Field.classList.contains('hidden') || !pw2.value){ el.textContent=''; el.className='matchhint'; return; }
+    if(pw1.value === pw2.value){ el.className='matchhint ok'; el.textContent='✓ 兩次一樣'; }
+    else{ el.className='matchhint no'; el.textContent='✕ 兩次唔一樣'; }
+  }
+  pw1.addEventListener('input', checkMatch);
+  pw2.addEventListener('input', checkMatch);
+
   pw1.addEventListener('input', function(){
     if(!isFirstRun && !recoveryMode) return;
     var s = pwScore(pw1.value);
@@ -636,7 +673,7 @@
     $('hintField').classList.add('hidden');
     $('meterWrap').classList.remove('hidden'); $('meterTxt').classList.remove('hidden');
     $('hintShow').classList.add('hidden');
-    pw1.previousElementSibling.textContent = '新主密碼';
+    $('pw1Label').textContent = '新主密碼';
     unlockBtn.textContent = '重設主密碼';
     lockMsg.className='msg'; lockMsg.textContent='';
     $('recInput').focus();
@@ -701,7 +738,12 @@
     $('forgotBtn').classList.remove('hidden');
     $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
     isFirstRun = false; pendingImport = null; recoveryMode = false;
-    pw1.previousElementSibling.textContent = '主密碼';
+    $('pw1Label').textContent = '主密碼';
+    $('matchHint').textContent = '';
+    [].forEach.call(document.querySelectorAll('.pw-eye'), function(b){
+      $(b.getAttribute('data-for')).type = 'password';
+      b.classList.remove('on'); b.textContent = '👁';
+    });
     $('lockTitle').textContent = '輸入主密碼';
     $('lockDesc').textContent  = '資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。';
     if(hint){
