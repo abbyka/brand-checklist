@@ -210,6 +210,7 @@
 
       <div class="lock-foot" id="lockFoot">
         <div><button id="btnNewVault" class="hidden" type="button">我真係第一次用 → 建立一個全新密碼庫</button></div>
+        <div><button id="btnHaveVault" class="hidden" type="button">🔗 我之前已經開過庫 → 貼返我條連結</button></div>
         <div><button id="forgotBtn" type="button">🆘 唔記得主密碼?用救援碼開返</button></div>
         <div style="margin-top:6px;">
           <span id="lockFootText">冇咗條連結?</span>
@@ -526,9 +527,12 @@
 
   /* 部機唔認得你 → 俾你自己揀:貼返連結,定係真係第一次用 */
   function showChooser(){
-    chooserMode = true;
+    chooserMode = true; isFirstRun = false;
     $('lockTitle').textContent = '呢部機未開過你個庫';
     $('lockDesc').textContent  = '如果你之前開過,請貼返你嗰條專屬連結（帶 #k= 嗰條）。真係第一次用先撳下面建立新庫。';
+    $('btnHaveVault').classList.add('hidden');
+    $('hintShow').classList.add('hidden');
+    lockMsg.className='msg'; lockMsg.textContent='';
     $('pw1Field').classList.add('hidden');
     pw2Field.classList.add('hidden');
     $('hintField').classList.add('hidden');
@@ -544,10 +548,18 @@
     chooserMode = false;
     $('linkField').classList.add('hidden');
     $('btnNewVault').classList.add('hidden');
+    $('btnHaveVault').classList.add('hidden');
     $('pw1Field').classList.remove('hidden');
     $('forgotBtn').classList.remove('hidden');
+    pw2Field.classList.add('hidden');
+    $('hintField').classList.add('hidden');
+    $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
     unlockBtn.textContent = '解鎖';
   }
+
+  $('btnHaveVault').addEventListener('click', function(){
+    showChooser();
+  });
 
   $('btnNewVault').addEventListener('click', function(){
     if(!confirm('確定係第一次用?\n\n如果你其實已經開過個庫,咁樣會開多一個全新空庫,原本啲資料唔會出現（但唔會唔見咗,貼返條連結就搵得返）。')) return;
@@ -573,6 +585,7 @@
         $('meterWrap').classList.remove('hidden');
         $('meterTxt').classList.remove('hidden');
         $('forgotBtn').classList.add('hidden');
+        $('btnHaveVault').classList.remove('hidden');   // 永遠留返條後路
         unlockBtn.textContent = '建立密碼庫';
         $('lockFootText').textContent = '已經有備份檔?';
       }else{
@@ -813,6 +826,7 @@
     isFirstRun = false; pendingImport = null; recoveryMode = false; chooserMode = false;
     $('linkField').classList.add('hidden');
     $('btnNewVault').classList.add('hidden');
+    $('btnHaveVault').classList.add('hidden');
     $('pw1Field').classList.remove('hidden');
     $('pw1Label').textContent = '主密碼';
     $('matchHint').textContent = '';
