@@ -173,7 +173,12 @@
       <h2 id="lockTitle">輸入主密碼</h2>
       <p class="desc" id="lockDesc">資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。</p>
 
-      <div class="field">
+      <div class="field hidden" id="linkField">
+        <label for="linkInput">你嘅專屬連結</label>
+        <input type="text" id="linkInput" placeholder="https://…/accounts.html#k=…" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="field" id="pw1Field">
         <label for="pw1" id="pw1Label">主密碼</label>
         <div class="pw-wrap">
           <input type="password" id="pw1" autocomplete="current-password">
@@ -204,6 +209,7 @@
       <div class="msg" id="lockMsg"></div>
 
       <div class="lock-foot" id="lockFoot">
+        <div><button id="btnNewVault" class="hidden" type="button">我真係第一次用 → 建立一個全新密碼庫</button></div>
         <div><button id="forgotBtn" type="button">🆘 唔記得主密碼?用救援碼開返</button></div>
         <div style="margin-top:6px;">
           <span id="lockFootText">冇咗條連結?</span>
@@ -508,16 +514,52 @@
       try{ localStorage.setItem(K_STORE, urlKey); }catch(e){}
       // 唔好留低喺網址列,免得被人望到
       history.replaceState(null, '', location.pathname);
-    }else if(savedKey){
-      secretKey = savedKey;
-    }else{
-      // 全新:整條密鑰
-      secretKey = genKey();
-      isFirstRun = true;
-      try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
+      return initWithKey();
     }
+    if(savedKey){
+      secretKey = savedKey;
+      return initWithKey();
+    }
+    // 呢部機從來未開過:唔好靜靜雞開個新庫,問清楚先
+    showChooser();
+  }
 
-    sha256hex(secretKey + '|vault-row').then(function(h){
+  /* 部機唔認得你 → 俾你自己揀:貼返連結,定係真係第一次用 */
+  function showChooser(){
+    chooserMode = true;
+    $('lockTitle').textContent = '呢部機未開過你個庫';
+    $('lockDesc').textContent  = '如果你之前開過,請貼返你嗰條專屬連結（帶 #k= 嗰條）。真係第一次用先撳下面建立新庫。';
+    $('pw1Field').classList.add('hidden');
+    pw2Field.classList.add('hidden');
+    $('hintField').classList.add('hidden');
+    $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
+    $('forgotBtn').classList.add('hidden');
+    $('linkField').classList.remove('hidden');
+    $('btnNewVault').classList.remove('hidden');
+    unlockBtn.textContent = '用呢條連結開庫';
+    $('linkInput').focus();
+  }
+
+  function leaveChooser(){
+    chooserMode = false;
+    $('linkField').classList.add('hidden');
+    $('btnNewVault').classList.add('hidden');
+    $('pw1Field').classList.remove('hidden');
+    $('forgotBtn').classList.remove('hidden');
+    unlockBtn.textContent = '解鎖';
+  }
+
+  $('btnNewVault').addEventListener('click', function(){
+    if(!confirm('確定係第一次用?\n\n如果你其實已經開過個庫,咁樣會開多一個全新空庫,原本啲資料唔會出現（但唔會唔見咗,貼返條連結就搵得返）。')) return;
+    secretKey = genKey();
+    try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
+    isFirstRun = true;
+    leaveChooser();
+    initWithKey();
+  });
+
+  function initWithKey(){
+    return sha256hex(secretKey + '|vault-row').then(function(h){
       rowId = h.slice(0, 40);
       return isFirstRun ? Promise.resolve(null) : sbFetchRow();
     }).then(function(pack){
@@ -533,9 +575,14 @@
         $('forgotBtn').classList.add('hidden');
         unlockBtn.textContent = '建立密碼庫';
         $('lockFootText').textContent = '已經有備份檔?';
-      }else if(pack.hint){
-        $('hintShow').textContent = '💡 你嘅提示：' + pack.hint;
-        $('hintShow').classList.remove('hidden');
+      }else{
+        $('lockTitle').textContent = '搵到你個庫喇 · 輸入主密碼';
+        $('lockDesc').textContent  = '資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。';
+        lockMsg.className='msg'; lockMsg.textContent='';
+        if(pack.hint){
+          $('hintShow').textContent = '💡 你嘅提示：' + pack.hint;
+          $('hintShow').classList.remove('hidden');
+        }
       }
       pw1.focus();
     }).catch(function(e){
@@ -545,6 +592,7 @@
   }
 
   var recoveryMode = false;
+  var chooserMode  = false;
   var freshRecCode = null;   // 啱啱產生、要俾用家抄低嗰個
 
   function openEnvelope(env, passphrase, which){
@@ -558,6 +606,19 @@
   function doUnlock(){
     var p1 = pw1.value;
     lockMsg.className='msg'; lockMsg.textContent='';
+
+    /* ---- 貼連結模式 ---- */
+    if(chooserMode){
+      var raw = ($('linkInput').value || '').trim();
+      var m = raw.match(/[#&?]k=([A-Za-z0-9_\-]{20,})/) || raw.match(/^([A-Za-z0-9_\-]{40,})$/);
+      if(!m) return showErr('搵唔到密鑰。請貼成條連結（要有 #k= 嗰段）');
+      secretKey = m[1];
+      try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
+      leaveChooser();
+      showOk('搵緊你個庫…');
+      initWithKey();
+      return;
+    }
 
     /* ---- 救援碼模式 ---- */
     if(recoveryMode){
@@ -710,10 +771,22 @@
       showSyncErr(e); throw e;
     });
   }
+  var dirty = false;
   function queueSave(){
+    dirty = true;
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(function(){ save().catch(function(){}); }, 700);
+    saveTimer = setTimeout(flushSave, 600);
   }
+  function flushSave(){
+    clearTimeout(saveTimer); saveTimer = null;
+    if(!dirty) return Promise.resolve();
+    return save().then(function(){ dirty = false; }).catch(function(){});
+  }
+  /* 收埋個 tab、切去第二個 app、熄螢幕 —— 呢個係最可靠嘅時機,即刻存 */
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden' && dirty) flushSave();
+  });
+  window.addEventListener('pagehide', function(){ if(dirty) flushSave(); });
 
   /* ================= 進出 ================= */
   function enterVault(showKeyCard){
@@ -737,7 +810,10 @@
     $('hintField').classList.add('hidden');
     $('forgotBtn').classList.remove('hidden');
     $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
-    isFirstRun = false; pendingImport = null; recoveryMode = false;
+    isFirstRun = false; pendingImport = null; recoveryMode = false; chooserMode = false;
+    $('linkField').classList.add('hidden');
+    $('btnNewVault').classList.add('hidden');
+    $('pw1Field').classList.remove('hidden');
     $('pw1Label').textContent = '主密碼';
     $('matchHint').textContent = '';
     [].forEach.call(document.querySelectorAll('.pw-eye'), function(b){
@@ -1019,8 +1095,7 @@
     queueSave(); render();
   });
   $('btnLock').addEventListener('click', function(){
-    clearTimeout(saveTimer);
-    save().catch(function(){}).then(function(){ lock(); });
+    flushSave().then(function(){ lock(); });
   });
 
   /* ================= 備份 / 還原 ================= */
@@ -1150,10 +1225,13 @@
     }).catch(function(e){ alert('產生失敗:'+e.message); });
   });
 
+  /* 萬一真係啱啱打完就撳交叉,攔一攔佢,唔好蝕咗最後幾個字 */
   window.addEventListener('beforeunload', function(e){
-    if(masterPw && saveTimer){
-      clearTimeout(saveTimer);
-      save().catch(function(){});
+    if(dek && dirty){
+      flushSave();
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
     }
   });
 
