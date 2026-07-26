@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>帳號密碼庫</title>
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="帳號庫">
+<style>
+  :root{
+    --bg:#EEF2F1;
+    --bg-grid: rgba(51,88,125,0.07);
+    --ink:#1B3358;
+    --ink-soft:#5B6B7C;
+    --line:#33587D;
+    --accent:#E29A3D;
+    --danger:#B3402E;
+    --ok:#2E7D5B;
+    --header-bg:#122238;
+    --header-ink:#EAF3F7;
+    --header-ink-dim:rgba(234,243,247,0.62);
+    --card-bg:#FFFFFF;
+    --card-border:rgba(27,51,88,0.13);
+    --radius:12px;
+    --font-cjk:"PingFang HK","Microsoft JhengHei","Noto Sans TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-mono: ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 34px),
+      repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 34px);
+    color:var(--ink);
+    font-family:var(--font-cjk);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .ruler{height:6px;background:repeating-linear-gradient(90deg, var(--accent) 0 1px, transparent 1px 13px);opacity:.55;}
+  .app{max-width:900px;margin:0 auto;padding:0 16px 80px;}
+  .hidden{display:none !important;}
+
+  /* ---------- 頂 ---------- */
+  .hero{background:var(--header-bg);color:var(--header-ink);padding:24px 22px 22px;position:relative;overflow:hidden;}
+  .hero:before,.hero:after{content:'+';position:absolute;font-family:var(--font-mono);font-size:14px;color:var(--header-ink-dim);opacity:.5;}
+  .hero:before{top:14px;left:16px;}
+  .hero:after{bottom:14px;right:16px;}
+  .hero-inner{max-width:900px;margin:0 auto;position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--header-ink-dim);margin:0 0 8px;}
+  .eyebrow a{color:var(--header-ink-dim);}
+  h1{font-size:clamp(21px,4vw,28px);line-height:1.2;margin:0;font-weight:700;letter-spacing:-.01em;}
+  h1 .accent{color:var(--accent);}
+  .hero-sub{color:var(--header-ink-dim);margin:6px 0 0;font-size:12.5px;}
+  .hero-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .hbtn{font-family:var(--font-mono);font-size:12px;background:rgba(234,243,247,.1);color:var(--header-ink);border:1px solid rgba(234,243,247,.35);border-radius:8px;padding:7px 12px;cursor:pointer;white-space:nowrap;}
+  .hbtn:hover{background:rgba(234,243,247,.2);}
+  .hbtn.warn{border-color:rgba(226,154,61,.7);color:var(--accent);}
+
+  /* ---------- 鎖屏 ---------- */
+  .lockwrap{max-width:440px;margin:52px auto;padding:0 16px;}
+  .lockcard{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:30px 26px;box-shadow:0 6px 24px rgba(27,51,88,.09);}
+  .lock-ico{font-size:34px;line-height:1;margin-bottom:12px;}
+  .lockcard h2{margin:0 0 6px;font-size:19px;}
+  .lockcard p.desc{margin:0 0 18px;font-size:13px;color:var(--ink-soft);}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
+  input[type=text],input[type=password]{width:100%;font-family:var(--font-cjk);font-size:14px;padding:10px 12px;border:1px solid var(--card-border);border-radius:8px;background:#fff;color:var(--ink);}
+  input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .btn{display:block;width:100%;text-align:center;font-family:var(--font-cjk);font-size:14.5px;font-weight:600;padding:11px 16px;border:none;border-radius:8px;background:var(--line);color:#fff;cursor:pointer;}
+  .btn:hover{filter:brightness(1.1);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .msg{font-size:12.5px;margin-top:10px;min-height:18px;}
+  .msg.err{color:var(--danger);}
+  .msg.ok{color:var(--ok);}
+  .lock-foot{margin-top:18px;padding-top:14px;border-top:1px dashed var(--card-border);font-size:11.5px;color:var(--ink-soft);}
+  .lock-foot button{background:none;border:none;padding:0;font:inherit;color:var(--line);text-decoration:underline;cursor:pointer;}
+  .meter{height:5px;border-radius:3px;background:rgba(27,51,88,.12);overflow:hidden;margin-top:7px;}
+  .meter i{display:block;height:100%;width:0;background:var(--danger);transition:width .2s,background .2s;}
+  .meter-txt{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);margin-top:4px;}
+
+  /* ---------- 密鑰連結卡 ---------- */
+  .keycard{background:#FFF4E3;border:1px solid rgba(226,154,61,.55);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:16px;}
+  .keycard h3{margin:0 0 6px;font-size:15px;color:#7A5320;}
+  .keycard p{margin:0 0 11px;font-size:12.5px;color:#7A5320;}
+  .linkbox{font-family:var(--font-mono);font-size:11px;background:#fff;border:1px solid rgba(226,154,61,.5);border-radius:8px;padding:10px 12px;word-break:break-all;color:var(--ink);margin-bottom:10px;}
+
+  /* ---------- 工具列 ---------- */
+  .toolbar{display:flex;gap:10px;align-items:center;margin:18px 0 14px;flex-wrap:wrap;}
+  .toolbar input[type=text]{flex:1;min-width:170px;}
+  .tbtn{font-family:var(--font-mono);font-size:12px;background:#fff;color:var(--ink);border:1px solid var(--card-border);border-radius:8px;padding:9px 13px;cursor:pointer;white-space:nowrap;}
+  .tbtn:hover{border-color:var(--line);}
+  .counthint{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);}
+
+  /* ---------- 帳號 ---------- */
+  .acct{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:11px;overflow:hidden;}
+  .acct-head{display:flex;align-items:center;gap:11px;padding:14px 16px;cursor:pointer;user-select:none;}
+  .acct-head:hover{background:rgba(51,88,125,.035);}
+  .chev{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);transition:transform .18s;flex-shrink:0;}
+  .acct.open .chev{transform:rotate(90deg);}
+  .acct-name{font-weight:700;font-size:15.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .acct-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);flex-shrink:0;}
+  .acct-edit{background:none;border:1px solid var(--card-border);color:var(--ink-soft);cursor:pointer;font-size:12px;line-height:1;padding:5px 8px;border-radius:6px;flex-shrink:0;}
+  .acct-edit:hover{border-color:var(--accent);background:rgba(226,154,61,.14);}
+  .acct-body{display:none;padding:0 16px 16px;border-top:1px dashed var(--card-border);}
+  .acct.open .acct-body{display:block;}
+
+  /* ---------- 平台卡 ---------- */
+  .plat{border:1px solid var(--card-border);border-radius:10px;padding:13px 14px;margin-top:12px;background:rgba(238,242,241,.42);}
+  .plat-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .plat-ico{font-size:15px;flex-shrink:0;}
+  .plat-title{font-weight:600;font-size:13.5px;flex:1;border:none;background:transparent;color:var(--ink);font-family:var(--font-cjk);padding:2px 4px;border-radius:5px;min-width:0;}
+  .plat-title:hover,.plat-title:focus{background:#fff;outline:1px solid var(--card-border);}
+  .plat-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1;padding:2px 5px;border-radius:5px;flex-shrink:0;}
+  .plat-del:hover{color:var(--danger);background:rgba(179,64,46,.09);}
+  .plat-add{background:none;border:1px solid rgba(226,154,61,.55);color:var(--accent);cursor:pointer;font-size:13px;font-weight:700;line-height:1;padding:4px 8px;border-radius:6px;flex-shrink:0;}
+  .plat-add:hover{background:rgba(226,154,61,.16);}
+  .plat-dup{font-family:var(--font-mono);font-size:10px;color:var(--ink-soft);background:rgba(27,51,88,.07);border-radius:4px;padding:2px 6px;flex-shrink:0;}
+  .row{display:grid;grid-template-columns:76px 1fr auto;gap:7px;align-items:center;margin-bottom:7px;}
+  .row:last-child{margin-bottom:0;}
+  .row label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-soft);text-transform:uppercase;}
+  .row input{width:100%;font-size:13.5px;padding:8px 10px;}
+  .row .actions{display:flex;gap:4px;}
+  .mini{background:#fff;border:1px solid var(--card-border);border-radius:6px;font-size:11px;padding:6px 8px;cursor:pointer;color:var(--ink-soft);font-family:var(--font-mono);white-space:nowrap;}
+  .mini:hover{border-color:var(--line);color:var(--ink);}
+  .mini.copied{border-color:var(--ok);color:var(--ok);}
+  .plat-note{margin-top:7px;}
+  .plat-note textarea{width:100%;font-family:var(--font-cjk);font-size:12.5px;padding:8px 10px;border:1px solid var(--card-border);border-radius:8px;resize:vertical;min-height:34px;color:var(--ink);background:#fff;}
+  .addrow{margin-top:12px;display:flex;gap:7px;flex-wrap:wrap;}
+
+  .savehint{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--header-bg);color:var(--header-ink);font-family:var(--font-mono);font-size:11.5px;padding:8px 15px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;}
+  .savehint.show{opacity:.94;}
+  .warnbar{background:#FFF4E3;border:1px solid rgba(226,154,61,.5);border-radius:10px;padding:11px 14px;font-size:12.5px;color:#7A5320;margin:16px 0 0;}
+  .errbar{background:#FBE9E6;border:1px solid rgba(179,64,46,.45);border-radius:10px;padding:11px 14px;font-size:12.5px;color:#7A2A1C;margin:16px 0 0;}
+  .errbar code{font-family:var(--font-mono);font-size:11px;}
+
+  /* ---------- 彈窗 ---------- */
+  .modal{position:fixed;inset:0;background:rgba(18,34,56,.62);display:flex;align-items:center;justify-content:center;padding:18px;z-index:70;}
+  .modal-card{background:#fff;border-radius:var(--radius);padding:26px 24px;max-width:480px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.28);max-height:90vh;overflow:auto;}
+  .modal-card h3{margin:0 0 8px;font-size:17px;}
+  .modal-card p{font-size:13px;color:var(--ink-soft);margin:0 0 14px;}
+
+  @media(max-width:560px){
+    .row{grid-template-columns:1fr;gap:4px;}
+    .row label{margin-top:4px;}
+    .row .actions{justify-content:flex-start;}
+    .hero-inner{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== 鎖屏 ===================== -->
+<div id="lockScreen">
+  <div class="ruler"></div>
+  <div class="lockwrap">
+    <div class="lockcard">
+      <div class="lock-ico">🔒</div>
+      <h2 id="lockTitle">輸入主密碼</h2>
+      <p class="desc" id="lockDesc">資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。</p>
+
+      <div class="field">
+        <label for="pw1">主密碼</label>
+        <input type="password" id="pw1" autocomplete="current-password">
+        <div class="meter hidden" id="meterWrap"><i id="meterBar"></i></div>
+        <div class="meter-txt hidden" id="meterTxt"></div>
+      </div>
+      <div class="field hidden" id="pw2Field">
+        <label for="pw2">再輸入一次</label>
+        <input type="password" id="pw2" autocomplete="new-password">
+      </div>
+
+      <button class="btn" id="unlockBtn">解鎖</button>
+      <div class="msg" id="lockMsg"></div>
+
+      <div class="lock-foot" id="lockFoot">
+        <span id="lockFootText">冇咗條連結?</span>
+        <button id="importFromLock" type="button">由備份檔還原</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== 主畫面 ===================== -->
+<div id="vaultScreen" class="hidden">
+  <div class="ruler"></div>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <p class="eyebrow"><a href="index.html">← 返 Checklist</a></p>
+        <h1>帳號<span class="accent">密碼庫</span></h1>
+        <p class="hero-sub" id="heroSub">—</p>
+      </div>
+      <div class="hero-actions">
+        <button class="hbtn" id="btnLink">🔗 我嘅連結</button>
+        <button class="hbtn" id="btnExport">⬇︎ 備份</button>
+        <button class="hbtn" id="btnImport">⬆︎ 還原</button>
+        <button class="hbtn" id="btnChangePw">改密碼</button>
+        <button class="hbtn warn" id="btnLock">🔒 鎖定</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="app">
+    <div id="firstRunKey" class="hidden"></div>
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="搵帳號 / 平台…">
+      <button class="tbtn" id="btnExpandAll">全部展開</button>
+      <button class="tbtn" id="btnCollapseAll">全部收埋</button>
+      <button class="tbtn" id="btnAddAcct">＋ 新增帳號</button>
+    </div>
+    <div id="acctList"></div>
+    <div id="syncErr" class="errbar hidden"></div>
+    <div class="warnbar">
+      🔗 呢個庫要「你嗰條完整連結」＋「主密碼」兩樣先開到。撳上面「我嘅連結」可以複製條 link 傳去手機。<br>
+      💾 記得偶然撳一次「備份」—— 備份檔入面連密鑰都有,萬一連結同部機都冇咗都救得返。
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".json,application/json" class="hidden">
+<div class="savehint" id="saveHint">已儲存</div>
+<div id="modalHost"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================= 設定 ================= */
+  var SUPABASE_URL = 'https://umbpnhbnyjgqmoilxbfu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_l2VM6-NBoj3q6KbakOsB9A_iIyoUu4-';
+  var TABLE   = 'vault';
+  var K_STORE = 'acct_vault_key';     // 部機記住條密鑰
+  var IDLE_MS = 10 * 60 * 1000;
+  var ITER    = 600000;
+  var MIN_PW  = 8;
+
+  var secretKey = null;   // base64url 密鑰(來自連結)
+  var rowId     = null;   // 由密鑰推導,人哋估唔到
+  var masterPw  = null;
+  var data      = null;
+  var saveTimer = null, idleTimer = null, hintTimer = null;
+  var pendingImport = null;
+  var isFirstRun = false;
+
+  /* ================= 預設內容 ================= */
+  var DEFAULT_ACCOUNTS = [
+    'taiyeung','mc','pure dream','wanna be','jelwery','nova marketing',
+    'housing agent','fitness mola','pet.slave.store','nichi.store','dental.ease.sz'
+  ];
+  var DEFAULT_PLATFORMS = [
+    {icon:'📷', title:'Instagram'},
+    {icon:'📘', title:'Facebook'},
+    {icon:'✉️', title:'Gmail'},
+    {icon:'🔗', title:'其他'}
+  ];
+  var PLATFORM_PRESETS = [
+    {icon:'📷', title:'Instagram'},   {icon:'📘', title:'Facebook'},
+    {icon:'✉️', title:'Gmail'},       {icon:'🧵', title:'Threads'},
+    {icon:'🎵', title:'TikTok'},      {icon:'▶️', title:'YouTube'},
+    {icon:'💬', title:'WhatsApp Business'}, {icon:'📕', title:'小紅書'},
+    {icon:'🛒', title:'Shopify'},     {icon:'🌐', title:'網站後台'},
+    {icon:'🎨', title:'Canva'},       {icon:'🔗', title:'其他'}
+  ];
+
+  /* ================= 小工具 ================= */
+  function $(id){ return document.getElementById(id); }
+  function uid(){
+    var a = new Uint8Array(8); crypto.getRandomValues(a);
+    return Array.prototype.map.call(a, function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+  }
+  function newPlatform(p){ return {id:uid(), icon:p.icon, title:p.title, account:'', password:'', note:''}; }
+  function blankData(){
+    return { accounts: DEFAULT_ACCOUNTS.map(function(n){
+      return {id:uid(), name:n, platforms:DEFAULT_PLATFORMS.map(newPlatform)};
+    })};
+  }
+  function b64enc(buf){
+    var b = new Uint8Array(buf), s='';
+    for(var i=0;i<b.length;i++) s += String.fromCharCode(b[i]);
+    return btoa(s);
+  }
+  function b64dec(str){
+    var s = atob(str), a = new Uint8Array(s.length);
+    for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i);
+    return a;
+  }
+  function b64url(buf){ return b64enc(buf).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  function flash(t){
+    var el = $('saveHint'); el.textContent = t; el.classList.add('show');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(function(){ el.classList.remove('show'); }, 1400);
+  }
+
+  /* ================= 加密 ================= */
+  function deriveKey(pw, salt){
+    // 主密碼 + 連結入面條密鑰,兩樣夾埋先開到
+    var material = pw + ' ' + secretKey;
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(material), 'PBKDF2', false, ['deriveKey'])
+      .then(function(base){
+        return crypto.subtle.deriveKey(
+          {name:'PBKDF2', salt:salt, iterations:ITER, hash:'SHA-256'},
+          base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+      });
+  }
+  function encryptData(obj, pw){
+    var salt = crypto.getRandomValues(new Uint8Array(16));
+    var iv   = crypto.getRandomValues(new Uint8Array(12));
+    return deriveKey(pw, salt).then(function(key){
+      return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key,
+        new TextEncoder().encode(JSON.stringify(obj)));
+    }).then(function(ct){
+      return {v:2, alg:'AES-GCM', iter:ITER, salt:b64enc(salt), iv:b64enc(iv), ct:b64enc(ct)};
+    });
+  }
+  function decryptData(pack, pw){
+    return deriveKey(pw, b64dec(pack.salt)).then(function(key){
+      return crypto.subtle.decrypt({name:'AES-GCM', iv:b64dec(pack.iv)}, key, b64dec(pack.ct));
+    }).then(function(plain){
+      return JSON.parse(new TextDecoder().decode(plain));
+    });
+  }
+  function sha256hex(str){
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){
+        return b.toString(16).padStart(2,'0');
+      }).join('');
+    });
+  }
+
+  /* ================= Supabase ================= */
+  function sbHeaders(extra){
+    var h = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json'
+    };
+    if(extra) for(var k in extra) h[k] = extra[k];
+    return h;
+  }
+  function sbFetchRow(){
+    return fetch(SUPABASE_URL + '/rest/v1/' + TABLE + '?id=eq.' + encodeURIComponent(rowId) + '&select=payload',
+      {headers: sbHeaders()})
+      .then(function(r){
+        if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t); });
+        return r.json();
+      })
+      .then(function(rows){ return (rows && rows[0]) ? rows[0].payload : null; });
+  }
+  function sbUpsert(payload){
+    return fetch(SUPABASE_URL + '/rest/v1/' + TABLE,
+      { method:'POST',
+        headers: sbHeaders({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+        body: JSON.stringify({id:rowId, payload:payload, updated_at:new Date().toISOString()}) })
+      .then(function(r){
+        if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t); });
+      });
+  }
+  function showSyncErr(e){
+    var el = $('syncErr');
+    var msg = String(e && e.message || e);
+    if(msg.indexOf('42P01') > -1 || msg.indexOf('does not exist') > -1 || msg.indexOf('404') > -1){
+      el.innerHTML = '⚠️ Supabase 未有 <code>vault</code> 表。請去 Supabase → SQL Editor 執行一次建表 SQL,再重新載入呢版。';
+    }else{
+      el.textContent = '⚠️ 同步出問題:' + msg + '(你嘅改動未上到雲,唔好熄咗個窗,搞掂再試。)';
+    }
+    el.classList.remove('hidden');
+  }
+
+  /* ================= 密鑰 / 連結 ================= */
+  function readKeyFromUrl(){
+    var m = location.hash.match(/[#&]k=([A-Za-z0-9_\-]+)/);
+    return m ? m[1] : null;
+  }
+  function myLink(){
+    return location.origin + location.pathname + '#k=' + secretKey;
+  }
+  function genKey(){
+    var a = new Uint8Array(32); crypto.getRandomValues(a);
+    return b64url(a);
+  }
+
+  /* ================= 鎖屏 ================= */
+  var pw1 = $('pw1'), pw2 = $('pw2'), pw2Field = $('pw2Field');
+  var lockMsg = $('lockMsg'), unlockBtn = $('unlockBtn');
+
+  function showErr(t){ lockMsg.className='msg err'; lockMsg.textContent = t; }
+  function showOk(t){ lockMsg.className='msg ok'; lockMsg.textContent = t; }
+
+  function pwScore(p){
+    var s = 0;
+    if(p.length >= 8) s++;
+    if(p.length >= 12) s++;
+    if(p.length >= 16) s++;
+    if(/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+    if(/[0-9]/.test(p)) s++;
+    if(/[^A-Za-z0-9]/.test(p)) s++;
+    return Math.min(s, 5);
+  }
+  pw1.addEventListener('input', function(){
+    if(!isFirstRun) return;
+    var s = pwScore(pw1.value);
+    var pct = [8,25,45,65,85,100][s];
+    var col = s<=1 ? '#B3402E' : (s<=3 ? '#E29A3D' : '#2E7D5B');
+    var txt = ['太弱','弱','麻麻','OK','夠好','好強'][s];
+    $('meterBar').style.width = pct+'%';
+    $('meterBar').style.background = col;
+    $('meterTxt').textContent = '強度:' + txt + ' · 建議用一句你記得嘅長句子,12 個字以上';
+  });
+
+  function boot(){
+    if(!window.crypto || !crypto.subtle){
+      showErr('呢個瀏覽器唔支援加密功能,請用 Chrome / Safari / Edge 開。');
+      unlockBtn.disabled = true;
+      return;
+    }
+
+    var urlKey = readKeyFromUrl();
+    var savedKey = null;
+    try{ savedKey = localStorage.getItem(K_STORE); }catch(e){}
+
+    if(urlKey){
+      secretKey = urlKey;
+      try{ localStorage.setItem(K_STORE, urlKey); }catch(e){}
+      // 唔好留低喺網址列,免得被人望到
+      history.replaceState(null, '', location.pathname);
+    }else if(savedKey){
+      secretKey = savedKey;
+    }else{
+      // 全新:整條密鑰
+      secretKey = genKey();
+      isFirstRun = true;
+      try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
+    }
+
+    sha256hex(secretKey + '|vault-row').then(function(h){
+      rowId = h.slice(0, 40);
+      return isFirstRun ? Promise.resolve(null) : sbFetchRow();
+    }).then(function(pack){
+      if(!pack){
+        // 雲端未有嘢 → 當第一次用
+        isFirstRun = true;
+        $('lockTitle').textContent = '設定主密碼';
+        $('lockDesc').textContent  = '第一次用。呢個密碼冇得復原,唔好唔記得。';
+        pw2Field.classList.remove('hidden');
+        $('meterWrap').classList.remove('hidden');
+        $('meterTxt').classList.remove('hidden');
+        unlockBtn.textContent = '建立密碼庫';
+        $('lockFootText').textContent = '已經有備份檔?';
+      }
+      pw1.focus();
+    }).catch(function(e){
+      showErr('連唔到雲端:' + e.message);
+      console.error(e);
+    });
+  }
+
+  function doUnlock(){
+    var p1 = pw1.value;
+    lockMsg.className='msg'; lockMsg.textContent='';
+    if(!p1) return showErr('請輸入密碼');
+
+    if(pendingImport){
+      unlockBtn.disabled = true; showOk('解密緊…');
+      var savedSecret = secretKey;
+      if(pendingImport.k) secretKey = pendingImport.k;
+      decryptData(pendingImport.vault, p1).then(function(obj){
+        masterPw = p1; data = normalize(obj);
+        try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
+        return sha256hex(secretKey + '|vault-row').then(function(h){
+          rowId = h.slice(0,40);
+          pendingImport = null;
+          return save();
+        });
+      }).then(function(){
+        unlockBtn.disabled = false; enterVault();
+      }).catch(function(err){
+        secretKey = savedSecret;
+        unlockBtn.disabled = false;
+        showErr('密碼唔啱,開唔到呢個備份檔');
+        console.error(err);
+      });
+      return;
+    }
+
+    if(isFirstRun){
+      if(p1.length < MIN_PW) return showErr('密碼至少 ' + MIN_PW + ' 個字元(建議 12 個以上)');
+      if(p1 !== pw2.value) return showErr('兩次輸入唔一樣');
+      masterPw = p1; data = blankData();
+      unlockBtn.disabled = true; showOk('建立緊…');
+      save().then(function(){
+        unlockBtn.disabled = false;
+        enterVault(true);
+      }).catch(function(e){
+        unlockBtn.disabled = false;
+        showErr('建立失敗:' + e.message);
+      });
+      return;
+    }
+
+    unlockBtn.disabled = true; showOk('解密緊…');
+    sbFetchRow().then(function(pack){
+      if(!pack) throw new Error('雲端搵唔到資料');
+      return decryptData(pack, p1);
+    }).then(function(obj){
+      masterPw = p1; data = normalize(obj);
+      unlockBtn.disabled = false;
+      enterVault();
+    }).catch(function(e){
+      unlockBtn.disabled = false;
+      showErr(/HTTP|搵唔到|Failed to fetch/.test(e.message) ? ('開唔到:'+e.message) : '密碼唔啱');
+      console.error(e);
+    });
+  }
+  unlockBtn.addEventListener('click', doUnlock);
+  [pw1,pw2].forEach(function(el){
+    el.addEventListener('keydown', function(e){ if(e.key==='Enter') doUnlock(); });
+  });
+
+  function normalize(obj){
+    if(!obj || !Array.isArray(obj.accounts)) return blankData();
+    obj.accounts.forEach(function(a){
+      if(!a.id) a.id = uid();
+      if(!Array.isArray(a.platforms)) a.platforms = [];
+      a.platforms.forEach(function(p){
+        if(!p.id) p.id = uid();
+        p.icon = p.icon || '🔗'; p.title = p.title || '其他';
+        p.account = p.account || ''; p.password = p.password || ''; p.note = p.note || '';
+      });
+    });
+    return obj;
+  }
+
+  /* ================= 儲存 ================= */
+  function save(){
+    if(!masterPw || !data) return Promise.resolve();
+    return encryptData(data, masterPw).then(function(pack){
+      return sbUpsert(pack);
+    }).then(function(){
+      $('syncErr').classList.add('hidden');
+      flash('已同步');
+    }).catch(function(e){
+      showSyncErr(e); throw e;
+    });
+  }
+  function queueSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){ save().catch(function(){}); }, 700);
+  }
+
+  /* ================= 進出 ================= */
+  function enterVault(showKeyCard){
+    $('lockScreen').classList.add('hidden');
+    $('vaultScreen').classList.remove('hidden');
+    pw1.value=''; pw2.value=''; lockMsg.textContent='';
+    render();
+    resetIdle();
+    if(showKeyCard) linkModal(true);
+  }
+  function lock(){
+    clearTimeout(saveTimer); clearTimeout(idleTimer);
+    masterPw = null; data = null;
+    $('acctList').innerHTML = '';
+    $('vaultScreen').classList.add('hidden');
+    $('lockScreen').classList.remove('hidden');
+    pw1.value=''; pw2.value='';
+    pw2Field.classList.add('hidden');
+    $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
+    isFirstRun = false; pendingImport = null;
+    $('lockTitle').textContent = '輸入主密碼';
+    $('lockDesc').textContent  = '資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。';
+    unlockBtn.textContent = '解鎖'; unlockBtn.disabled = false;
+    pw1.focus();
+  }
+  function resetIdle(){
+    clearTimeout(idleTimer);
+    if(masterPw) idleTimer = setTimeout(lock, IDLE_MS);
+  }
+  ['click','keydown','mousemove','touchstart'].forEach(function(ev){
+    document.addEventListener(ev, function(){ if(masterPw) resetIdle(); }, {passive:true});
+  });
+
+  /* ================= 畫面 ================= */
+  var acctList = $('acctList');
+  var openSet = {};
+
+  function render(){
+    var q = ($('search').value || '').trim().toLowerCase();
+    acctList.innerHTML = '';
+    var shown = 0;
+
+    data.accounts.forEach(function(acct){
+      var hit = !q || acct.name.toLowerCase().indexOf(q) > -1
+        || acct.platforms.some(function(p){ return (p.title+' '+p.account).toLowerCase().indexOf(q) > -1; });
+      if(!hit) return;
+      shown++;
+
+      var filled = acct.platforms.filter(function(p){ return p.account || p.password; }).length;
+      var box = document.createElement('div');
+      box.className = 'acct' + ((openSet[acct.id] || q) ? ' open' : '');
+
+      var head = document.createElement('div');
+      head.className = 'acct-head';
+      head.innerHTML = '<span class="chev">▶</span>';
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'acct-name';
+      nameEl.textContent = acct.name;
+      nameEl.title = '雙擊改名';
+      function renameAcct(e){
+        e.stopPropagation();
+        var v = prompt('改帳號名', acct.name);
+        if(v !== null && v.trim()){ acct.name = v.trim(); queueSave(); render(); }
+      }
+      nameEl.addEventListener('dblclick', renameAcct);
+      head.appendChild(nameEl);
+
+      var meta = document.createElement('span');
+      meta.className = 'acct-meta';
+      meta.textContent = filled + '/' + acct.platforms.length;
+      head.appendChild(meta);
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'acct-edit';
+      editBtn.textContent = '✏️';
+      editBtn.title = '改帳號名';
+      editBtn.addEventListener('click', renameAcct);
+      head.appendChild(editBtn);
+
+      head.addEventListener('click', function(){
+        openSet[acct.id] = !box.classList.contains('open');
+        box.classList.toggle('open');
+      });
+      box.appendChild(head);
+
+      var body = document.createElement('div');
+      body.className = 'acct-body';
+      acct.platforms.forEach(function(p){ body.appendChild(platformCard(acct, p)); });
+
+      var add = document.createElement('div');
+      add.className = 'addrow';
+
+      var addBtn = document.createElement('button');
+      addBtn.className = 'mini';
+      addBtn.textContent = '＋ 加平台';
+      addBtn.addEventListener('click', function(){
+        var list = PLATFORM_PRESETS.map(function(x,i){ return (i+1)+'. '+x.title; }).join('\n');
+        var pick = prompt('揀一個加入「'+acct.name+'」(輸入數字),或者直接打自訂名:\n\n'+list);
+        if(pick === null) return;
+        pick = pick.trim(); if(!pick) return;
+        var n = parseInt(pick,10);
+        var preset = (!isNaN(n) && n>=1 && n<=PLATFORM_PRESETS.length)
+          ? PLATFORM_PRESETS[n-1] : {icon:'🔗', title:pick};
+        acct.platforms.push(newPlatform(preset));
+        openSet[acct.id] = true;
+        queueSave(); render();
+      });
+      add.appendChild(addBtn);
+
+      var delAcct = document.createElement('button');
+      delAcct.className = 'mini';
+      delAcct.textContent = '刪除呢個帳號';
+      delAcct.addEventListener('click', function(){
+        if(confirm('確定刪除「'+acct.name+'」同埋入面所有資料?')){
+          data.accounts = data.accounts.filter(function(a){ return a.id !== acct.id; });
+          queueSave(); render();
+        }
+      });
+      add.appendChild(delAcct);
+      body.appendChild(add);
+      box.appendChild(body);
+      acctList.appendChild(box);
+    });
+
+    if(shown === 0){
+      var p = document.createElement('p');
+      p.className = 'counthint'; p.textContent = '搵唔到相關帳號。';
+      acctList.appendChild(p);
+    }
+    updateHero();
+  }
+
+  function updateHero(){
+    var total=0, filled=0;
+    data.accounts.forEach(function(a){
+      a.platforms.forEach(function(p){ total++; if(p.account||p.password) filled++; });
+    });
+    $('heroSub').textContent = data.accounts.length + ' 個帳號 · ' + filled + '/' + total + ' 個平台已填';
+  }
+
+  function platformCard(acct, p){
+    var card = document.createElement('div');
+    card.className = 'plat';
+
+    var head = document.createElement('div');
+    head.className = 'plat-head';
+
+    var ico = document.createElement('span');
+    ico.className = 'plat-ico'; ico.textContent = p.icon;
+    head.appendChild(ico);
+
+    var title = document.createElement('input');
+    title.className='plat-title'; title.type='text'; title.value=p.title; title.title='可以改名';
+    title.addEventListener('input', function(){ p.title = title.value; queueSave(); });
+    head.appendChild(title);
+
+    // 同一個品牌可能有幾個 IG / FB,撳「＋」即刻加多一個同類型
+    var same = acct.platforms.filter(function(x){ return x.title === p.title; });
+    if(same.length > 1){
+      var tag = document.createElement('span');
+      tag.className = 'plat-dup';
+      tag.textContent = '#' + (same.indexOf(p) + 1);
+      head.appendChild(tag);
+    }
+
+    var addSame = document.createElement('button');
+    addSame.className='plat-add'; addSame.textContent='＋';
+    addSame.title='加多一個「'+p.title+'」';
+    addSame.addEventListener('click', function(){
+      var i = acct.platforms.indexOf(p);
+      acct.platforms.splice(i + 1, 0, newPlatform({icon:p.icon, title:p.title}));
+      openSet[acct.id] = true;
+      queueSave(); render();
+    });
+    head.appendChild(addSame);
+
+    var del = document.createElement('button');
+    del.className='plat-del'; del.innerHTML='✕'; del.title='刪除呢個平台';
+    del.addEventListener('click', function(){
+      if(confirm('刪除「'+acct.name+' — '+p.title+'」?')){
+        acct.platforms = acct.platforms.filter(function(x){ return x.id !== p.id; });
+        queueSave(); render();
+      }
+    });
+    head.appendChild(del);
+    card.appendChild(head);
+
+    card.appendChild(fieldRow('帳號 / ID', p, 'account', false));
+    card.appendChild(fieldRow('密碼', p, 'password', true));
+
+    var noteWrap = document.createElement('div');
+    noteWrap.className='plat-note';
+    var note = document.createElement('textarea');
+    note.rows=1; note.placeholder='備註:綁定 email、電話、2FA、回覆問題…'; note.value=p.note;
+    note.addEventListener('input', function(){ p.note = note.value; queueSave(); });
+    noteWrap.appendChild(note);
+    card.appendChild(noteWrap);
+    return card;
+  }
+
+  function fieldRow(labelText, obj, key, isSecret){
+    var row = document.createElement('div');
+    row.className='row';
+    var lab = document.createElement('label'); lab.textContent = labelText; row.appendChild(lab);
+
+    var input = document.createElement('input');
+    input.type = isSecret ? 'password' : 'text';
+    input.value = obj[key]; input.autocomplete='off'; input.spellcheck=false;
+    input.addEventListener('input', function(){ obj[key]=input.value; queueSave(); updateHero(); });
+    row.appendChild(input);
+
+    var actions = document.createElement('div'); actions.className='actions';
+    if(isSecret){
+      var eye = document.createElement('button');
+      eye.className='mini'; eye.textContent='👁'; eye.title='顯示 / 隱藏';
+      eye.addEventListener('click', function(){
+        input.type = (input.type === 'password') ? 'text' : 'password';
+      });
+      actions.appendChild(eye);
+    }
+    var copy = document.createElement('button');
+    copy.className='mini'; copy.textContent='複製';
+    copy.addEventListener('click', function(){
+      copyText(input.value).then(function(){
+        copy.textContent='✓'; copy.classList.add('copied');
+        setTimeout(function(){ copy.textContent='複製'; copy.classList.remove('copied'); },1200);
+      });
+    });
+    actions.appendChild(copy);
+    row.appendChild(actions);
+    return row;
+  }
+
+  function copyText(t){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(t).catch(function(){ return fallbackCopy(t); });
+    }
+    return fallbackCopy(t);
+  }
+  function fallbackCopy(t){
+    var ta = document.createElement('textarea');
+    ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  }
+
+  /* ================= 連結彈窗 ================= */
+  function linkModal(first){
+    var host = $('modalHost');
+    host.innerHTML =
+      '<div class="modal"><div class="modal-card">' +
+        '<h3>' + (first ? '🔑 存好呢條連結!' : '🔗 我嘅連結') + '</h3>' +
+        '<p>' + (first
+          ? '呢條連結入面有你嘅密鑰。<b>冇咗佢就開唔返個庫。</b>而家即刻傳去自己手機、加入書籤,或者記低。'
+          : '傳呢條連結去你手機或者第二部電腦,開咗之後打主密碼就用得。') + '</p>' +
+        '<div class="linkbox" id="linkText"></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button class="btn" id="mCopy" style="flex:1;min-width:130px;">複製連結</button>' +
+          '<button class="btn" id="mClose" style="flex:1;min-width:110px;background:var(--ink-soft);">' + (first ? '我存好喇' : '閂咗佢') + '</button>' +
+        '</div>' +
+      '</div></div>';
+    $('linkText').textContent = myLink();
+    $('mCopy').addEventListener('click', function(){
+      copyText(myLink()).then(function(){ $('mCopy').textContent = '✓ 已複製'; });
+    });
+    $('mClose').addEventListener('click', function(){ host.innerHTML=''; });
+  }
+  $('btnLink').addEventListener('click', function(){ linkModal(false); });
+
+  /* ================= 工具列 ================= */
+  $('search').addEventListener('input', render);
+  $('btnExpandAll').addEventListener('click', function(){
+    data.accounts.forEach(function(a){ openSet[a.id]=true; }); render();
+  });
+  $('btnCollapseAll').addEventListener('click', function(){ openSet={}; render(); });
+  $('btnAddAcct').addEventListener('click', function(){
+    var name = prompt('新帳號名稱');
+    if(!name || !name.trim()) return;
+    data.accounts.push({id:uid(), name:name.trim(), platforms:DEFAULT_PLATFORMS.map(newPlatform)});
+    queueSave(); render();
+  });
+  $('btnLock').addEventListener('click', function(){
+    clearTimeout(saveTimer);
+    save().catch(function(){}).then(function(){ lock(); });
+  });
+
+  /* ================= 備份 / 還原 ================= */
+  $('btnExport').addEventListener('click', function(){
+    encryptData(data, masterPw).then(function(pack){
+      var out = { type:'account-vault-backup', v:2, k:secretKey, vault:pack, exported:new Date().toISOString() };
+      var blob = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
+      var url = URL.createObjectURL(blob);
+      var d = new Date();
+      var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+      var a = document.createElement('a');
+      a.href=url; a.download='accounts-backup-'+stamp+'.json';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+      flash('備份已下載(已加密)');
+    });
+  });
+
+  var fileInput = $('fileInput');
+  var importTarget = 'vault';
+  $('btnImport').addEventListener('click', function(){ importTarget='vault'; fileInput.value=''; fileInput.click(); });
+  $('importFromLock').addEventListener('click', function(){ importTarget='lock'; fileInput.value=''; fileInput.click(); });
+
+  fileInput.addEventListener('change', function(){
+    var f = fileInput.files && fileInput.files[0];
+    if(!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var pack;
+      try{ pack = JSON.parse(reader.result); }
+      catch(e){ alert('讀唔到呢個檔案,格式唔啱。'); return; }
+      var vault = pack.vault || pack;
+      if(!vault || !vault.ct || !vault.salt || !vault.iv){ alert('唔係有效嘅備份檔。'); return; }
+
+      if(importTarget === 'lock'){
+        pendingImport = {vault:vault, k:pack.k || null};
+        isFirstRun = false;
+        pw2Field.classList.add('hidden');
+        $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
+        $('lockTitle').textContent = '還原備份';
+        $('lockDesc').textContent  = '輸入呢個備份檔嘅主密碼。';
+        unlockBtn.textContent = '還原';
+        lockMsg.className='msg'; lockMsg.textContent='';
+        pw1.value=''; pw1.focus();
+      }else{
+        var pw = prompt('輸入呢個備份檔嘅主密碼:');
+        if(!pw) return;
+        var saved = secretKey;
+        if(pack.k) secretKey = pack.k;
+        decryptData(vault, pw).then(function(obj){
+          secretKey = saved;
+          if(!confirm('確定用備份覆蓋而家所有資料?')) return;
+          data = normalize(obj);
+          queueSave(); render(); flash('已還原');
+        }).catch(function(){
+          secretKey = saved;
+          alert('密碼唔啱,開唔到呢個備份檔。');
+        });
+      }
+    };
+    reader.readAsText(f);
+  });
+
+  /* ================= 改主密碼 ================= */
+  $('btnChangePw').addEventListener('click', function(){
+    var cur = prompt('先輸入而家嘅主密碼:');
+    if(cur === null) return;
+    if(cur !== masterPw){ alert('密碼唔啱。'); return; }
+    var np = prompt('新主密碼(至少 ' + MIN_PW + ' 個字元,建議 12 個以上):');
+    if(np === null) return;
+    if(np.length < MIN_PW){ alert('太短喇。'); return; }
+    if(np !== prompt('再輸入一次新密碼:')){ alert('兩次唔一樣。'); return; }
+    masterPw = np;
+    save().then(function(){
+      alert('主密碼已更改。舊嘅備份檔仍然要用舊密碼開,記得重新匯出一次。');
+    }).catch(function(e){ alert('更改失敗:'+e.message); });
+  });
+
+  window.addEventListener('beforeunload', function(e){
+    if(masterPw && saveTimer){
+      clearTimeout(saveTimer);
+      save().catch(function(){});
+    }
+  });
+
+  boot();
+})();
+</script>
+</body>
+</html>

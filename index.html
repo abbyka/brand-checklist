@@ -51,6 +51,9 @@
   .biz-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--header-ink-dim);}
   .biz-switcher select{font-family:var(--font-mono);font-size:12.5px;background:rgba(234,243,247,.1);color:var(--header-ink);border:1px solid rgba(234,243,247,.35);border-radius:8px;padding:6px 10px;cursor:pointer;}
   .biz-switcher select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .acct-link{display:inline-block;margin-top:2px;font-family:var(--font-mono);font-size:12px;text-decoration:none;background:rgba(234,243,247,.1);color:var(--header-ink);border:1px solid rgba(226,154,61,.65);border-radius:8px;padding:6px 10px;white-space:nowrap;}
+  .acct-link:hover{background:rgba(226,154,61,.22);}
+  .acct-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   #bizNameTag{color:var(--accent);font-weight:700;}
   .hero-inner{max-width:760px;margin:0 auto;position:relative;z-index:1;}
   .eyebrow{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--header-ink-dim);margin:0 0 14px;}
@@ -234,6 +237,7 @@
     <div class="biz-switcher">
       <label for="bizSelect" class="biz-label">BUSINESS</label>
       <select id="bizSelect"></select>
+      <a class="acct-link" href="accounts.html" title="帳號密碼庫（要主密碼）">🔒 Account</a>
     </div>
     <div class="hero-inner">
       <p class="eyebrow">BRAND BUILD-OUT · 品牌行銷全案 · <span id="bizNameTag"></span></p>
