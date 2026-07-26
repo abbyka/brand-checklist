@@ -82,6 +82,8 @@
   .meter{height:5px;border-radius:3px;background:rgba(27,51,88,.12);overflow:hidden;margin-top:7px;}
   .meter i{display:block;height:100%;width:0;background:var(--danger);transition:width .2s,background .2s;}
   .meter-txt{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);margin-top:4px;}
+  .hintshow{background:rgba(226,154,61,.13);border:1px dashed rgba(226,154,61,.6);border-radius:8px;padding:9px 12px;font-size:12.5px;color:#7A5320;margin:0 0 12px;}
+  .reccode{font-family:var(--font-mono);font-size:15px;letter-spacing:.06em;background:#fff;border:2px dashed rgba(226,154,61,.75);border-radius:10px;padding:14px 12px;text-align:center;word-break:break-all;color:var(--ink);margin-bottom:10px;line-height:1.9;}
 
   /* ---------- 密鑰連結卡 ---------- */
   .keycard{background:#FFF4E3;border:1px solid rgba(226,154,61,.55);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:16px;}
@@ -173,13 +175,25 @@
         <label for="pw2">再輸入一次</label>
         <input type="password" id="pw2" autocomplete="new-password">
       </div>
+      <div class="field hidden" id="hintField">
+        <label for="hintInput">密碼提示（自己睇,可以留白）</label>
+        <input type="text" id="hintInput" placeholder="例如：阿媽出生年 + 舊屋企" autocomplete="off">
+      </div>
+      <div class="field hidden" id="recField">
+        <label for="recInput">救援碼</label>
+        <input type="text" id="recInput" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false">
+      </div>
 
+      <p class="hintshow hidden" id="hintShow"></p>
       <button class="btn" id="unlockBtn">解鎖</button>
       <div class="msg" id="lockMsg"></div>
 
       <div class="lock-foot" id="lockFoot">
-        <span id="lockFootText">冇咗條連結?</span>
-        <button id="importFromLock" type="button">由備份檔還原</button>
+        <div><button id="forgotBtn" type="button">🆘 唔記得主密碼?用救援碼開返</button></div>
+        <div style="margin-top:6px;">
+          <span id="lockFootText">冇咗條連結?</span>
+          <button id="importFromLock" type="button">由備份檔還原</button>
+        </div>
       </div>
     </div>
   </div>
@@ -200,6 +214,7 @@
         <button class="hbtn" id="btnExport">⬇︎ 備份</button>
         <button class="hbtn" id="btnImport">⬆︎ 還原</button>
         <button class="hbtn" id="btnChangePw">改密碼</button>
+        <button class="hbtn" id="btnRecovery">🆘 救援碼</button>
         <button class="hbtn warn" id="btnLock">🔒 鎖定</button>
       </div>
     </div>
@@ -217,6 +232,7 @@
     <div id="syncErr" class="errbar hidden"></div>
     <div class="warnbar">
       🔗 呢個庫要「你嗰條完整連結」＋「主密碼」兩樣先開到。撳上面「我嘅連結」可以複製條 link 傳去手機。<br>
+      🆘 唔記得主密碼?喺登入版撳「唔記得主密碼」,用開庫嗰陣抄低嗰串救援碼就開返到。<br>
       💾 記得偶然撳一次「備份」—— 備份檔入面連密鑰都有,萬一連結同部機都冇咗都救得返。
     </div>
   </div>
@@ -242,6 +258,8 @@
   var secretKey = null;   // base64url 密鑰(來自連結)
   var rowId     = null;   // 由密鑰推導,人哋估唔到
   var masterPw  = null;
+  var dek       = null;   // 資料鎖匙(解鎖期間先喺記憶體)
+  var envelope  = null;   // {v,hint,data,wrapPw,wrapRec}
   var data      = null;
   var saveTimer = null, idleTimer = null, hintTimer = null;
   var pendingImport = null;
@@ -307,23 +325,48 @@
           base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
       });
   }
-  function encryptData(obj, pw){
+  /* 結構:啲資料由一條隨機「資料鎖匙」(DEK)加密。
+     嗰條 DEK 再被鎖兩次 —— 一次用主密碼,一次用救援碼。
+     兩者任何一個都開到 DEK,但兩者都唔會存落任何地方。 */
+  function genDEK(){
+    return crypto.subtle.generateKey({name:'AES-GCM', length:256}, true, ['encrypt','decrypt']);
+  }
+  function wrapDEK(dek, passphrase){
     var salt = crypto.getRandomValues(new Uint8Array(16));
     var iv   = crypto.getRandomValues(new Uint8Array(12));
-    return deriveKey(pw, salt).then(function(key){
-      return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, key,
-        new TextEncoder().encode(JSON.stringify(obj)));
-    }).then(function(ct){
-      return {v:2, alg:'AES-GCM', iter:ITER, salt:b64enc(salt), iv:b64enc(iv), ct:b64enc(ct)};
+    return Promise.all([crypto.subtle.exportKey('raw', dek), deriveKey(passphrase, salt)])
+      .then(function(r){
+        return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, r[1], r[0]);
+      }).then(function(ct){
+        return {salt:b64enc(salt), iv:b64enc(iv), ct:b64enc(ct)};
+      });
+  }
+  function unwrapDEK(wrapped, passphrase){
+    return deriveKey(passphrase, b64dec(wrapped.salt)).then(function(kek){
+      return crypto.subtle.decrypt({name:'AES-GCM', iv:b64dec(wrapped.iv)}, kek, b64dec(wrapped.ct));
+    }).then(function(raw){
+      return crypto.subtle.importKey('raw', raw, 'AES-GCM', true, ['encrypt','decrypt']);
     });
   }
-  function decryptData(pack, pw){
-    return deriveKey(pw, b64dec(pack.salt)).then(function(key){
-      return crypto.subtle.decrypt({name:'AES-GCM', iv:b64dec(pack.iv)}, key, b64dec(pack.ct));
-    }).then(function(plain){
-      return JSON.parse(new TextDecoder().decode(plain));
-    });
+  function encryptWithDEK(obj, dek){
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    return crypto.subtle.encrypt({name:'AES-GCM', iv:iv}, dek,
+      new TextEncoder().encode(JSON.stringify(obj)))
+      .then(function(ct){ return {iv:b64enc(iv), ct:b64enc(ct)}; });
   }
+  function decryptWithDEK(blob, dek){
+    return crypto.subtle.decrypt({name:'AES-GCM', iv:b64dec(blob.iv)}, dek, b64dec(blob.ct))
+      .then(function(plain){ return JSON.parse(new TextDecoder().decode(plain)); });
+  }
+
+  /* 救援碼:25 位,去走咗易撈亂嘅 O/0/I/1 */
+  var REC_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function genRecoveryCode(){
+    var a = new Uint8Array(25); crypto.getRandomValues(a);
+    var s = Array.prototype.map.call(a, function(b){ return REC_ALPHA[b % REC_ALPHA.length]; }).join('');
+    return s.match(/.{5}/g).join('-');
+  }
+  function normRec(s){ return (s||'').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
   function sha256hex(str){
     return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(buf){
       return Array.prototype.map.call(new Uint8Array(buf), function(b){
@@ -402,7 +445,7 @@
     return Math.min(s, 5);
   }
   pw1.addEventListener('input', function(){
-    if(!isFirstRun) return;
+    if(!isFirstRun && !recoveryMode) return;
     var s = pwScore(pw1.value);
     var pct = [8,25,45,65,85,100][s];
     var col = s<=1 ? '#B3402E' : (s<=3 ? '#E29A3D' : '#2E7D5B');
@@ -445,12 +488,17 @@
         // 雲端未有嘢 → 當第一次用
         isFirstRun = true;
         $('lockTitle').textContent = '設定主密碼';
-        $('lockDesc').textContent  = '第一次用。呢個密碼冇得復原,唔好唔記得。';
+        $('lockDesc').textContent  = '第一次用。設定完會俾一串救援碼你,記得抄低。';
         pw2Field.classList.remove('hidden');
+        $('hintField').classList.remove('hidden');
         $('meterWrap').classList.remove('hidden');
         $('meterTxt').classList.remove('hidden');
+        $('forgotBtn').classList.add('hidden');
         unlockBtn.textContent = '建立密碼庫';
         $('lockFootText').textContent = '已經有備份檔?';
+      }else if(pack.hint){
+        $('hintShow').textContent = '💡 你嘅提示：' + pack.hint;
+        $('hintShow').classList.remove('hidden');
       }
       pw1.focus();
     }).catch(function(e){
@@ -459,21 +507,70 @@
     });
   }
 
+  var recoveryMode = false;
+  var freshRecCode = null;   // 啱啱產生、要俾用家抄低嗰個
+
+  function openEnvelope(env, passphrase, which){
+    var wrapped = (which === 'rec') ? env.wrapRec : env.wrapPw;
+    if(!wrapped) return Promise.reject(new Error(which === 'rec' ? '呢個庫未設過救援碼' : 'no-wrap'));
+    return unwrapDEK(wrapped, passphrase).then(function(k){
+      return decryptWithDEK(env.data, k).then(function(obj){ return {dek:k, obj:obj}; });
+    });
+  }
+
   function doUnlock(){
     var p1 = pw1.value;
     lockMsg.className='msg'; lockMsg.textContent='';
+
+    /* ---- 救援碼模式 ---- */
+    if(recoveryMode){
+      var code = normRec($('recInput').value);
+      if(code.length < 25) return showErr('請輸入完整 25 位救援碼');
+      if(p1.length < MIN_PW) return showErr('新主密碼至少 ' + MIN_PW + ' 個字元');
+      if(p1 !== pw2.value) return showErr('兩次輸入唔一樣');
+      unlockBtn.disabled = true; showOk('核對救援碼…');
+      var src = pendingImport ? Promise.resolve(pendingImport.payload) : sbFetchRow();
+      src.then(function(env){
+        if(!env) throw new Error('搵唔到資料');
+        if(pendingImport && pendingImport.k){
+          secretKey = pendingImport.k;
+          try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
+        }
+        return sha256hex(secretKey + '|vault-row').then(function(h){
+          rowId = h.slice(0,40);
+          return openEnvelope(env, code, 'rec').then(function(r){
+            envelope = env; dek = r.dek; data = normalize(r.obj); masterPw = p1;
+            pendingImport = null;
+            return wrapDEK(dek, p1);     // 用新主密碼重新上鎖
+          }).then(function(w){
+            envelope.wrapPw = w;
+            return save();
+          });
+        });
+      }).then(function(){
+        unlockBtn.disabled = false; recoveryMode = false;
+        enterVault();
+        alert('主密碼已重設。你原本嗰個救援碼仲有效,想換就喺上面撳「🆘 救援碼」。');
+      }).catch(function(e){
+        unlockBtn.disabled = false;
+        showErr(/未設過/.test(e.message) ? e.message : '救援碼唔啱');
+        console.error(e);
+      });
+      return;
+    }
+
     if(!p1) return showErr('請輸入密碼');
 
+    /* ---- 由備份檔還原 ---- */
     if(pendingImport){
       unlockBtn.disabled = true; showOk('解密緊…');
       var savedSecret = secretKey;
       if(pendingImport.k) secretKey = pendingImport.k;
-      decryptData(pendingImport.vault, p1).then(function(obj){
-        masterPw = p1; data = normalize(obj);
+      openEnvelope(pendingImport.payload, p1, 'pw').then(function(r){
+        envelope = pendingImport.payload; dek = r.dek; data = normalize(r.obj); masterPw = p1;
         try{ localStorage.setItem(K_STORE, secretKey); }catch(e){}
         return sha256hex(secretKey + '|vault-row').then(function(h){
-          rowId = h.slice(0,40);
-          pendingImport = null;
+          rowId = h.slice(0,40); pendingImport = null;
           return save();
         });
       }).then(function(){
@@ -487,27 +584,39 @@
       return;
     }
 
+    /* ---- 第一次建立 ---- */
     if(isFirstRun){
       if(p1.length < MIN_PW) return showErr('密碼至少 ' + MIN_PW + ' 個字元(建議 12 個以上)');
       if(p1 !== pw2.value) return showErr('兩次輸入唔一樣');
-      masterPw = p1; data = blankData();
       unlockBtn.disabled = true; showOk('建立緊…');
-      save().then(function(){
+      var code = genRecoveryCode();
+      data = blankData(); masterPw = p1;
+      genDEK().then(function(k){
+        dek = k;
+        return Promise.all([wrapDEK(dek, p1), wrapDEK(dek, normRec(code))]);
+      }).then(function(w){
+        envelope = { v:3, hint:($('hintInput').value || '').trim(), wrapPw:w[0], wrapRec:w[1] };
+        return save();
+      }).then(function(){
         unlockBtn.disabled = false;
+        freshRecCode = code;
         enterVault(true);
       }).catch(function(e){
         unlockBtn.disabled = false;
         showErr('建立失敗:' + e.message);
+        console.error(e);
       });
       return;
     }
 
+    /* ---- 平時解鎖 ---- */
     unlockBtn.disabled = true; showOk('解密緊…');
-    sbFetchRow().then(function(pack){
-      if(!pack) throw new Error('雲端搵唔到資料');
-      return decryptData(pack, p1);
-    }).then(function(obj){
-      masterPw = p1; data = normalize(obj);
+    sbFetchRow().then(function(env){
+      if(!env) throw new Error('雲端搵唔到資料');
+      envelope = env;
+      return openEnvelope(env, p1, 'pw');
+    }).then(function(r){
+      dek = r.dek; data = normalize(r.obj); masterPw = p1;
       unlockBtn.disabled = false;
       enterVault();
     }).catch(function(e){
@@ -516,6 +625,22 @@
       console.error(e);
     });
   }
+
+  /* ---- 唔記得密碼 ---- */
+  $('forgotBtn').addEventListener('click', function(){
+    recoveryMode = true; isFirstRun = false;
+    $('lockTitle').textContent = '用救援碼開返個庫';
+    $('lockDesc').textContent  = '輸入開庫嗰陣抄低嗰串 25 位救援碼,順便設個新主密碼。';
+    $('recField').classList.remove('hidden');
+    $('pw2Field').classList.remove('hidden');
+    $('hintField').classList.add('hidden');
+    $('meterWrap').classList.remove('hidden'); $('meterTxt').classList.remove('hidden');
+    $('hintShow').classList.add('hidden');
+    pw1.previousElementSibling.textContent = '新主密碼';
+    unlockBtn.textContent = '重設主密碼';
+    lockMsg.className='msg'; lockMsg.textContent='';
+    $('recInput').focus();
+  });
   unlockBtn.addEventListener('click', doUnlock);
   [pw1,pw2].forEach(function(el){
     el.addEventListener('keydown', function(e){ if(e.key==='Enter') doUnlock(); });
@@ -537,9 +662,10 @@
 
   /* ================= 儲存 ================= */
   function save(){
-    if(!masterPw || !data) return Promise.resolve();
-    return encryptData(data, masterPw).then(function(pack){
-      return sbUpsert(pack);
+    if(!dek || !data || !envelope) return Promise.resolve();
+    return encryptWithDEK(data, dek).then(function(blob){
+      envelope.data = blob;
+      return sbUpsert(envelope);
     }).then(function(){
       $('syncErr').classList.add('hidden');
       flash('已同步');
@@ -563,16 +689,27 @@
   }
   function lock(){
     clearTimeout(saveTimer); clearTimeout(idleTimer);
-    masterPw = null; data = null;
+    var hint = envelope && envelope.hint;
+    masterPw = null; dek = null; data = null; envelope = null; freshRecCode = null;
     $('acctList').innerHTML = '';
     $('vaultScreen').classList.add('hidden');
     $('lockScreen').classList.remove('hidden');
-    pw1.value=''; pw2.value='';
+    pw1.value=''; pw2.value=''; $('recInput').value=''; $('hintInput').value='';
     pw2Field.classList.add('hidden');
+    $('recField').classList.add('hidden');
+    $('hintField').classList.add('hidden');
+    $('forgotBtn').classList.remove('hidden');
     $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
-    isFirstRun = false; pendingImport = null;
+    isFirstRun = false; pendingImport = null; recoveryMode = false;
+    pw1.previousElementSibling.textContent = '主密碼';
     $('lockTitle').textContent = '輸入主密碼';
     $('lockDesc').textContent  = '資料喺你部機加密先上雲,伺服器見到嘅只係亂碼。';
+    if(hint){
+      $('hintShow').textContent = '💡 你嘅提示：' + hint;
+      $('hintShow').classList.remove('hidden');
+    }else{
+      $('hintShow').classList.add('hidden');
+    }
     unlockBtn.textContent = '解鎖'; unlockBtn.disabled = false;
     pw1.focus();
   }
@@ -819,7 +956,11 @@
     $('mCopy').addEventListener('click', function(){
       copyText(myLink()).then(function(){ $('mCopy').textContent = '✓ 已複製'; });
     });
-    $('mClose').addEventListener('click', function(){ host.innerHTML=''; });
+    $('mClose').addEventListener('click', function(){
+      host.innerHTML='';
+      // 第一次建立:存好連結之後,接住俾救援碼
+      if(first && freshRecCode) recoveryModal(freshRecCode, false);
+    });
   }
   $('btnLink').addEventListener('click', function(){ linkModal(false); });
 
@@ -842,8 +983,9 @@
 
   /* ================= 備份 / 還原 ================= */
   $('btnExport').addEventListener('click', function(){
-    encryptData(data, masterPw).then(function(pack){
-      var out = { type:'account-vault-backup', v:2, k:secretKey, vault:pack, exported:new Date().toISOString() };
+    encryptWithDEK(data, dek).then(function(blob){
+      envelope.data = blob;
+      var out = { type:'account-vault-backup', v:3, k:secretKey, payload:envelope, exported:new Date().toISOString() };
       var blob = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
       var url = URL.createObjectURL(blob);
       var d = new Date();
@@ -869,16 +1011,18 @@
       var pack;
       try{ pack = JSON.parse(reader.result); }
       catch(e){ alert('讀唔到呢個檔案,格式唔啱。'); return; }
-      var vault = pack.vault || pack;
-      if(!vault || !vault.ct || !vault.salt || !vault.iv){ alert('唔係有效嘅備份檔。'); return; }
+      var env = pack.payload || pack.vault || pack;
+      if(!env || !env.data || !env.wrapPw){ alert('唔係有效嘅備份檔（或者係舊格式）。'); return; }
 
       if(importTarget === 'lock'){
-        pendingImport = {vault:vault, k:pack.k || null};
-        isFirstRun = false;
+        pendingImport = {payload:env, k:pack.k || null};
+        isFirstRun = false; recoveryMode = false;
         pw2Field.classList.add('hidden');
+        $('recField').classList.add('hidden');
+        $('hintField').classList.add('hidden');
         $('meterWrap').classList.add('hidden'); $('meterTxt').classList.add('hidden');
         $('lockTitle').textContent = '還原備份';
-        $('lockDesc').textContent  = '輸入呢個備份檔嘅主密碼。';
+        $('lockDesc').textContent  = '輸入呢個備份檔嘅主密碼。唔記得就撳下面用救援碼。';
         unlockBtn.textContent = '還原';
         lockMsg.className='msg'; lockMsg.textContent='';
         pw1.value=''; pw1.focus();
@@ -887,10 +1031,10 @@
         if(!pw) return;
         var saved = secretKey;
         if(pack.k) secretKey = pack.k;
-        decryptData(vault, pw).then(function(obj){
+        openEnvelope(env, pw, 'pw').then(function(r){
           secretKey = saved;
           if(!confirm('確定用備份覆蓋而家所有資料?')) return;
-          data = normalize(obj);
+          data = normalize(r.obj);
           queueSave(); render(); flash('已還原');
         }).catch(function(){
           secretKey = saved;
@@ -910,10 +1054,58 @@
     if(np === null) return;
     if(np.length < MIN_PW){ alert('太短喇。'); return; }
     if(np !== prompt('再輸入一次新密碼:')){ alert('兩次唔一樣。'); return; }
-    masterPw = np;
-    save().then(function(){
+    wrapDEK(dek, np).then(function(w){
+      envelope.wrapPw = w; masterPw = np;
+      var h = prompt('順便更新密碼提示（可以留白）:', envelope.hint || '');
+      if(h !== null) envelope.hint = h.trim();
+      return save();
+    }).then(function(){
       alert('主密碼已更改。舊嘅備份檔仍然要用舊密碼開,記得重新匯出一次。');
     }).catch(function(e){ alert('更改失敗:'+e.message); });
+  });
+
+  /* ================= 救援碼 ================= */
+  function recoveryModal(code, isNew){
+    var host = $('modalHost');
+    host.innerHTML =
+      '<div class="modal"><div class="modal-card">' +
+        '<h3>🆘 你嘅救援碼</h3>' +
+        '<p>' + (isNew ? '舊嘅救援碼即刻失效。' : '') +
+        '呢串碼<b>淨係顯示今次</b>,唔會存喺任何地方。抄低或者 print 出嚟擺屋企安全位置 —— ' +
+        '萬一唔記得主密碼,得佢救到你。</p>' +
+        '<div class="reccode" id="recText"></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button class="btn" id="rCopy" style="flex:1;min-width:120px;">複製</button>' +
+          '<button class="btn" id="rPrint" style="flex:1;min-width:110px;background:var(--ink-soft);">列印</button>' +
+          '<button class="btn" id="rClose" style="flex:1;min-width:110px;background:var(--ok);">我抄低咗</button>' +
+        '</div>' +
+      '</div></div>';
+    $('recText').textContent = code;
+    $('rCopy').addEventListener('click', function(){
+      copyText(code).then(function(){ $('rCopy').textContent = '✓ 已複製'; });
+    });
+    $('rPrint').addEventListener('click', function(){
+      var w = window.open('', '_blank');
+      if(!w){ alert('瀏覽器擋咗新視窗,請改用「複製」。'); return; }
+      w.document.write('<pre style="font:16px monospace;padding:40px;line-height:2">' +
+        '帳號密碼庫 · 救援碼\n\n' + code +
+        '\n\n（萬一唔記得主密碼,喺個庫嘅登入版撳「唔記得主密碼」再輸入呢串碼）\n' +
+        '請擺喺安全地方,唔好影相放上網。</pre>');
+      w.document.close(); w.print();
+    });
+    $('rClose').addEventListener('click', function(){ host.innerHTML=''; freshRecCode = null; });
+  }
+
+  $('btnRecovery').addEventListener('click', function(){
+    if(freshRecCode){ recoveryModal(freshRecCode, false); return; }
+    if(!confirm('救援碼淨係顯示一次,已經睇唔返舊嗰個。\n要產生一個「新」救援碼嗎?（舊嗰個即刻作廢）')) return;
+    var code = genRecoveryCode();
+    wrapDEK(dek, normRec(code)).then(function(w){
+      envelope.wrapRec = w;
+      return save();
+    }).then(function(){
+      recoveryModal(code, true);
+    }).catch(function(e){ alert('產生失敗:'+e.message); });
   });
 
   window.addEventListener('beforeunload', function(e){
