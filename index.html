@@ -183,7 +183,13 @@
   .life-log-add-date{font-family:var(--font-mono);font-size:12px;padding:9px 8px;border:1px solid var(--card-border);border-radius:8px;background:var(--card-bg);color:var(--ink);}
   .life-log-add-btn{font-family:var(--font-mono);font-size:13px;font-weight:700;background:var(--header-bg);color:var(--header-ink);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;}
   .life-log-add-btn:hover{opacity:.88;}
-  .life-log-list{list-style:none;margin:0;padding:0 18px;max-width:900px;margin:0 auto;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);}
+  /* 一個分類一張卡,排版跟返上面 .todo-columns */
+  .life-log-columns{display:flex;gap:14px;flex-wrap:wrap;max-width:900px;margin:0 auto;align-items:flex-start;}
+  .life-log-col{flex:1 1 300px;min-width:260px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;}
+  .life-log-col-head{display:flex;align-items:baseline;gap:8px;padding:2px 0 8px;margin-bottom:2px;border-bottom:1.5px dashed var(--card-border);}
+  .life-log-col-name{font-family:var(--font-cjk);font-weight:700;font-size:15px;color:var(--ink);}
+  .life-log-col-count{font-family:var(--font-mono);font-size:10.8px;color:var(--ink-soft);margin-left:auto;}
+  .life-log-list{list-style:none;margin:0;padding:0;}
   .life-log-item{padding:14px 0;border-top:1px solid rgba(27,51,88,.07);}
   .life-log-item:first-child{border-top:none;}
   .life-log-num{display:inline-block;min-width:16px;font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:var(--line);margin-right:4px;}
@@ -242,6 +248,7 @@
     .todo-filter-btn{font-size:11px;padding:6px 12px;}
     .todo-col{padding:13px;min-width:0;}
     .life-log-section{padding:24px 12px 0;}
+    .life-log-col{padding:13px;min-width:0;}
   }
 </style>
 </head>
@@ -335,7 +342,7 @@
       <input type="date" class="life-log-add-date" title="上次已經做嘅日子(可選,唔填就當未做過)">
       <button type="button" class="life-log-add-btn">+ 加項目</button>
     </div>
-    <ul class="life-log-list" id="lifeLogList"></ul>
+    <div class="life-log-columns" id="lifeLogList"></div>
   </section>
 
   <p class="foot">呢版嘅剔選記錄實時共享,自動save落雲端資料庫。跟住個頻率持續做,個 marketing engine 就會一直運轉落去。</p>
@@ -1345,19 +1352,54 @@
     nudgeEl.classList.add('show');
   }
 
+  /* 分欄呈現:一個分類一張卡,同上面兩個人嘅共用清單同一個樣。
+     分類名擺咗喺欄頂,所以每行裏面唔使再重複個分類 pill。 */
   function renderLifeLog(){
     updateLifeLogCategoryOptions();
     updateLifeLogNudge();
     if(!lifeLogListEl) return;
     lifeLogListEl.innerHTML = '';
     if(!lifeLogItems.length){
-      var empty = document.createElement('li');
+      var empty = document.createElement('p');
       empty.className = 'life-log-empty';
       empty.textContent = '仲未有項目,喺上面打個名加一個(例如:針灸)。';
       lifeLogListEl.appendChild(empty);
       return;
     }
-    lifeLogItems.forEach(function(item, idx){
+
+    var groups = [];
+    lifeLogCategories().forEach(function(c){
+      var got = lifeLogItems.filter(function(x){ return x.category === c; });
+      if(got.length) groups.push({name:c, items:got});
+    });
+    var noCat = lifeLogItems.filter(function(x){ return !x.category; });
+    if(noCat.length) groups.push({name:'未分類', items:noCat});
+
+    groups.forEach(function(g){
+      var col = document.createElement('div');
+      col.className = 'life-log-col';
+
+      var head = document.createElement('div');
+      head.className = 'life-log-col-head';
+      var nameEl = document.createElement('span');
+      nameEl.className = 'life-log-col-name';
+      nameEl.textContent = g.name;
+      var countEl = document.createElement('span');
+      countEl.className = 'life-log-col-count';
+      countEl.textContent = g.items.length + ' 項';
+      head.appendChild(nameEl); head.appendChild(countEl);
+      col.appendChild(head);
+
+      var ul = document.createElement('ul');
+      ul.className = 'life-log-list';
+      g.items.forEach(function(item, idx){ ul.appendChild(buildLifeLogLi(item, idx)); });
+      col.appendChild(ul);
+      lifeLogListEl.appendChild(col);
+    });
+  }
+
+  function buildLifeLogLi(item, idx){
+    {
       var li = document.createElement('li');
       li.className = 'life-log-item';
       li.dataset.id = item.id;
@@ -1378,7 +1420,6 @@
         }).join('') + '</div>') : '';
       var cadenceLabel = CADENCE_LABELS[item.cadenceDays] || '';
       var badges = '';
-      if(item.category) badges += ' <span class="freq-pill">' + escapeHtml(item.category) + '</span>';
       if(cadenceLabel) badges += ' <span class="freq-pill">' + cadenceLabel + '</span>';
       var nextHtml = next ? ('<div class="life-log-status tier-' + next.tier + '">' + next.text + '</div>') : '';
       li.innerHTML =
@@ -1398,7 +1439,6 @@
           '<input type="date" class="life-log-mark-date" value="' + todayISO() + '" title="填今日或之前=記錄已做;填之後嘅日子=set做下次提醒">' +
           '<button type="button" class="life-log-mark-btn">+ 記錄</button>' +
         '</div>';
-      lifeLogListEl.appendChild(li);
 
       li.querySelector('.life-log-mark-btn').addEventListener('click', function(){
         var dateVal = li.querySelector('.life-log-mark-date').value || todayISO();
@@ -1421,7 +1461,8 @@
         var headEl = li.querySelector('.life-log-row-head');
         headEl.parentNode.insertBefore(buildLifeLogEditor(item), headEl.nextSibling);
       }
-    });
+      return li;
+    }
   }
 
   /* 改名 / 改分類 / 改提醒。個編輯框係鑲喺行入面,唔用 prompt ——
