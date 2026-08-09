@@ -191,6 +191,21 @@
   .life-log-name{font-weight:700;font-size:15px;color:var(--ink);}
   .life-log-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .life-log-del:hover{color:var(--danger);}
+  .life-log-name{cursor:pointer;}
+  .life-log-head-btns{display:flex;gap:2px;flex-shrink:0;align-items:center;}
+  .life-log-edit-btn{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;}
+  .life-log-edit-btn:hover{color:var(--accent);}
+  .life-log-edit{display:flex;flex-direction:column;gap:7px;margin:8px 0 10px;padding:11px 12px;
+    background:#fff;border:1px solid var(--accent);border-radius:10px;}
+  .life-log-edit input[type=text],.life-log-edit select{width:100%;font-family:var(--font-cjk);font-size:14px;
+    padding:9px 10px;border:1px solid rgba(27,51,88,.16);border-radius:8px;background:#fff;color:var(--ink);}
+  /* 呢版冇通用嘅 .hidden,要逐個寫返 scoped 規則 */
+  .life-log-edit-category-new.hidden{display:none;}
+  .life-log-edit-actions{display:flex;gap:7px;margin-top:2px;}
+  .life-log-edit-actions button{flex:1;font-family:var(--font-cjk);font-size:13.5px;font-weight:600;
+    padding:9px 12px;border:none;border-radius:8px;cursor:pointer;}
+  .life-log-edit-save{background:var(--accent);color:#fff;}
+  .life-log-edit-cancel{background:rgba(27,51,88,.09);color:var(--ink);}
   .life-log-status{font-family:var(--font-mono);font-size:11.8px;color:var(--ink-soft);margin-bottom:6px;}
   .life-log-status.tier-soon{color:var(--accent);font-weight:600;}
   .life-log-status.tier-overdue{color:var(--danger);font-weight:700;}
@@ -1241,6 +1256,7 @@
   var CADENCE_LABELS = {1:'每日',3:'每幾日',7:'每星期',14:'每兩星期',21:'每3星期',30:'每月',90:'每幾個月',182:'每半年',365:'一年'};
   var LIFE_LOG_PRESET_CATEGORIES = ['醫美','中醫/按摩','Gym','Facial'];
   var lifeLogItems = [];
+  var lifeLogEditingId = null;   // 邊個項目而家開緊編輯框
   var lifeLogChannel = null;
   var lifeLogListEl = document.getElementById('lifeLogList');
   var lifeLogAddCategorySel = document.querySelector('.life-log-add-category');
@@ -1367,8 +1383,13 @@
       var nextHtml = next ? ('<div class="life-log-status tier-' + next.tier + '">' + next.text + '</div>') : '';
       li.innerHTML =
         '<div class="life-log-row-head">' +
-          '<span class="life-log-name"><span class="life-log-num">' + (idx+1) + '.</span>' + escapeHtml(item.label) + badges + '</span>' +
-          '<button type="button" class="life-log-del" title="刪除">✕</button>' +
+          '<span class="life-log-name" title="撳個名就可以改">' +
+            '<span class="life-log-num">' + (idx+1) + '.</span>' + escapeHtml(item.label) + badges +
+          '</span>' +
+          '<span class="life-log-head-btns">' +
+            '<button type="button" class="life-log-edit-btn" title="改名 / 改分類 / 改提醒">✏️</button>' +
+            '<button type="button" class="life-log-del" title="刪除">✕</button>' +
+          '</span>' +
         '</div>' +
         '<div class="life-log-status' + (status.tier==='soon'?' tier-soon':status.tier==='overdue'?' tier-overdue':'') + '">' + status.text + '</div>' +
         nextHtml +
@@ -1387,7 +1408,101 @@
       li.querySelectorAll('.life-log-chip-del').forEach(function(btn){
         btn.addEventListener('click', function(){ removeLifeLogDate(item.id, btn.dataset.date); });
       });
+
+      function openEditor(){
+        lifeLogEditingId = (lifeLogEditingId === item.id) ? null : item.id;
+        renderLifeLog();
+      }
+      li.querySelector('.life-log-edit-btn').addEventListener('click', openEditor);
+      li.querySelector('.life-log-name').addEventListener('click', openEditor);
+
+      // 編輯框要貼住個名出,唔好跌落成行最底
+      if(lifeLogEditingId === item.id){
+        var headEl = li.querySelector('.life-log-row-head');
+        headEl.parentNode.insertBefore(buildLifeLogEditor(item), headEl.nextSibling);
+      }
     });
+  }
+
+  /* 改名 / 改分類 / 改提醒。個編輯框係鑲喺行入面,唔用 prompt ——
+     手機打字舒服啲,亦見得返而家嘅分類同頻率係咩。 */
+  function buildLifeLogEditor(item){
+    var box = document.createElement('div');
+    box.className = 'life-log-edit';
+
+    var name = document.createElement('input');
+    name.type = 'text'; name.className = 'life-log-edit-name';
+    name.value = item.label; name.placeholder = '項目名';
+
+    var cat = document.createElement('select');
+    cat.className = 'life-log-edit-category';
+    var catHtml = '<option value="">(無類別)</option>';
+    lifeLogCategories().forEach(function(c){
+      catHtml += '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
+    });
+    catHtml += '<option value="__new__">+ 新分類…</option>';
+    cat.innerHTML = catHtml;
+    cat.value = item.category || '';
+
+    var catNew = document.createElement('input');
+    catNew.type = 'text'; catNew.className = 'life-log-edit-category-new hidden';
+    catNew.placeholder = '打新分類名';
+    cat.addEventListener('change', function(){
+      catNew.classList.toggle('hidden', cat.value !== '__new__');
+      if(cat.value === '__new__') catNew.focus();
+    });
+
+    var cad = document.createElement('select');
+    cad.className = 'life-log-edit-cadence';
+    var cadHtml = '<option value="">唔提醒,淨係記日子</option>';
+    Object.keys(CADENCE_LABELS).forEach(function(d){
+      cadHtml += '<option value="' + d + '">' + CADENCE_LABELS[d] + '</option>';
+    });
+    cad.innerHTML = cadHtml;
+    cad.value = item.cadenceDays ? String(item.cadenceDays) : '';
+
+    var actions = document.createElement('div');
+    actions.className = 'life-log-edit-actions';
+    var save = document.createElement('button');
+    save.type = 'button'; save.className = 'life-log-edit-save'; save.textContent = '儲存';
+    var cancel = document.createElement('button');
+    cancel.type = 'button'; cancel.className = 'life-log-edit-cancel'; cancel.textContent = '取消';
+    actions.appendChild(save); actions.appendChild(cancel);
+
+    function commit(){
+      var label = (name.value || '').trim();
+      if(!label){ name.focus(); return; }
+      var category = cat.value === '__new__' ? (catNew.value || '').trim() : cat.value;
+      updateLifeLogItem(item.id, label, cad.value ? parseInt(cad.value, 10) : null, category || null);
+    }
+    save.addEventListener('click', commit);
+    cancel.addEventListener('click', function(){ lifeLogEditingId = null; renderLifeLog(); });
+    name.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') commit();
+      if(e.key === 'Escape'){ lifeLogEditingId = null; renderLifeLog(); }
+    });
+
+    box.appendChild(name); box.appendChild(cat); box.appendChild(catNew);
+    box.appendChild(cad); box.appendChild(actions);
+    setTimeout(function(){ name.focus(); name.select(); }, 0);
+    return box;
+  }
+
+  function updateLifeLogItem(id, label, cadenceDays, category){
+    var item = lifeLogItems.filter(function(x){ return x.id === id; })[0];
+    if(!item) return;
+    item.label = label;
+    item.cadenceDays = cadenceDays;
+    item.category = category;
+    lifeLogEditingId = null;
+    renderLifeLog();
+    if(sbClient){
+      sbClient.from('life_logs')
+        .update({label:label, cadence_days:cadenceDays, category:category})
+        .eq('id', id).eq('business_id', currentBusiness).then(function(res){
+          if(res && res.error){ console.error('life log update error', res.error); showSyncErrorToast('改「' + label + '」'); }
+        });
+    }
   }
 
   function addLifeLogItem(label, cadenceDays, category, initialDate){
