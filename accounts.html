@@ -142,6 +142,51 @@
   .plat-note textarea{width:100%;font-family:var(--font-cjk);font-size:12.5px;padding:8px 10px;border:1px solid var(--card-border);border-radius:8px;resize:vertical;min-height:34px;color:var(--ink);background:#fff;}
   .addrow{margin-top:12px;display:flex;gap:7px;flex-wrap:wrap;}
 
+  /* ---------- 私人庫 ---------- */
+  .hbtn.me{border-color:rgba(226,154,61,.7);background:rgba(226,154,61,.17);color:var(--accent);}
+  .hbtn.me:hover{background:rgba(226,154,61,.28);}
+  .pgate{max-width:440px;margin:26px auto 0;}
+  .pgroup{margin-bottom:20px;}
+  .pgroup-head{display:flex;align-items:center;gap:9px;margin:0 0 10px;cursor:pointer;user-select:none;}
+  .pgroup-head .chev{transition:transform .18s;}
+  .pgroup.open .pgroup-head .chev{transform:rotate(90deg);}
+  .pgroup-name{font-family:var(--font-mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;}
+  .pgroup-line{flex:1;height:1px;background:var(--card-border);}
+  .pgroup-body{display:none;}
+  .pgroup.open .pgroup-body{display:block;}
+  .pitem{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+  .pitem-head{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;user-select:none;}
+  .pitem-head:hover{background:rgba(51,88,125,.035);}
+  .pitem-ico{font-size:16px;flex-shrink:0;}
+  .pitem-name{font-weight:700;font-size:14.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pitem-body{display:none;padding:0 15px 15px;border-top:1px dashed var(--card-border);}
+  .pitem.open .pitem-body{display:block;}
+  .prow{grid-template-columns:104px 1fr auto;margin-top:9px;margin-bottom:0;}
+  /* 要夠力壓過 input[type=text],唔係個欄位名會變咗個白色輸入框 */
+  input.plabel{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;color:var(--ink-soft);
+    border:1px solid transparent;background:transparent;padding:5px;border-radius:5px;width:100%;min-width:0;}
+  input.plabel:hover,input.plabel:focus{background:#fff;border-color:var(--card-border);}
+  input.psecret{color:var(--accent);}
+  .pdel{background:none;border:1px solid var(--card-border);color:var(--ink-soft);cursor:pointer;font-size:11px;line-height:1;padding:6px 7px;border-radius:6px;}
+  .pdel:hover{color:var(--danger);border-color:var(--danger);background:rgba(179,64,46,.08);}
+  .pempty{text-align:center;padding:34px 18px;color:var(--ink-soft);font-size:13px;}
+
+  /* ---------- 批量貼上 ---------- */
+  textarea.bulk-ta{width:100%;font-family:var(--font-mono);font-size:12px;line-height:1.6;padding:10px 12px;
+    border:1px solid var(--card-border);border-radius:8px;resize:vertical;min-height:170px;color:var(--ink);background:#fff;}
+  .bulk-list{max-height:44vh;overflow:auto;margin-top:14px;border-top:1px dashed var(--card-border);}
+  .brow{padding:10px 2px;border-bottom:1px dashed var(--card-border);}
+  .btop{display:flex;gap:9px;align-items:center;}
+  .btop input[type=checkbox]{width:19px;height:19px;flex-shrink:0;accent-color:var(--line);}
+  .btop input.btitle{flex:1;min-width:0;font-size:13.5px;padding:7px 9px;}
+  .bbot{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;padding-left:28px;}
+  .bbot select{font-family:var(--font-cjk);font-size:12.5px;padding:6px 8px;border:1px solid var(--card-border);
+    border-radius:7px;background:#fff;color:var(--ink);}
+  .bmeta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
+  .bdup{font-family:var(--font-mono);font-size:10px;color:var(--danger);background:rgba(179,64,46,.1);
+    border-radius:4px;padding:2px 6px;}
+  .bsum{font-size:12.5px;color:var(--ink-soft);margin:12px 0 0;}
+
   .savehint{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--header-bg);color:var(--header-ink);font-family:var(--font-mono);font-size:11.5px;padding:8px 15px;border-radius:20px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:60;}
   .savehint.show{opacity:.94;}
   .warnbar{background:#FFF4E3;border:1px solid rgba(226,154,61,.5);border-radius:10px;padding:11px 14px;font-size:12.5px;color:#7A5320;margin:16px 0 0;}
@@ -159,6 +204,10 @@
     .row label{margin-top:4px;}
     .row .actions{justify-content:flex-start;}
     .hero-inner{flex-direction:column;}
+    /* 私人庫欄位多,手機唔好一格佔三行:欄位名自己一行,輸入格同啲掣並排 */
+    .prow{grid-template-columns:1fr auto;gap:4px 6px;margin-top:12px;}
+    .prow input.plabel{grid-column:1 / -1;padding-left:2px;}
+    .prow .actions{justify-content:flex-end;}
   }
 </style>
 </head>
@@ -228,10 +277,11 @@
     <div class="hero-inner">
       <div>
         <p class="eyebrow"><a href="index.html">← 返 Checklist</a></p>
-        <h1>帳號<span class="accent">密碼庫</span></h1>
+        <h1 id="heroTitle">帳號<span class="accent">密碼庫</span></h1>
         <p class="hero-sub" id="heroSub">—</p>
       </div>
       <div class="hero-actions">
+        <button class="hbtn me" id="btnPersonal">👤 Abby's</button>
         <button class="hbtn" id="btnLink">🔗 我嘅連結</button>
         <button class="hbtn" id="btnExport">⬇︎ 備份</button>
         <button class="hbtn" id="btnImport">⬆︎ 還原</button>
@@ -244,15 +294,84 @@
 
   <div class="app">
     <div id="firstRunKey" class="hidden"></div>
-    <div class="toolbar">
-      <input type="text" id="search" placeholder="搵帳號 / 平台…">
-      <button class="tbtn" id="btnExpandAll">全部展開</button>
-      <button class="tbtn" id="btnCollapseAll">全部收埋</button>
-      <button class="tbtn" id="btnAddAcct">＋ 新增帳號</button>
+
+    <!-- ---------- 品牌庫 ---------- -->
+    <div id="brandView">
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="搵帳號 / 平台…">
+        <button class="tbtn" id="btnExpandAll">全部展開</button>
+        <button class="tbtn" id="btnCollapseAll">全部收埋</button>
+        <button class="tbtn" id="btnAddAcct">＋ 新增帳號</button>
+      </div>
+      <div id="acctList"></div>
     </div>
-    <div id="acctList"></div>
+
+    <!-- ---------- 私人庫:第二重鎖 ---------- -->
+    <div id="personalGate" class="hidden">
+      <div class="pgate">
+        <div class="lockcard">
+          <div class="lock-ico">👤</div>
+          <h2 id="pTitle">Abby's 私人庫</h2>
+          <p class="desc" id="pDesc">呢邊用另一個密碼再鎖多重。</p>
+
+          <div class="field" id="pPw1Field">
+            <label for="pPw1" id="pPw1Label">私人密碼</label>
+            <div class="pw-wrap">
+              <input type="password" id="pPw1" autocomplete="off">
+              <button type="button" class="pw-eye" data-for="pPw1" title="顯示 / 隱藏密碼">👁</button>
+            </div>
+            <div class="meter hidden" id="pMeterWrap"><i id="pMeterBar"></i></div>
+            <div class="meter-txt hidden" id="pMeterTxt"></div>
+          </div>
+          <div class="field hidden" id="pPw2Field">
+            <label for="pPw2">再輸入一次</label>
+            <div class="pw-wrap">
+              <input type="password" id="pPw2" autocomplete="off">
+              <button type="button" class="pw-eye" data-for="pPw2" title="顯示 / 隱藏密碼">👁</button>
+            </div>
+            <p class="matchhint" id="pMatchHint"></p>
+          </div>
+          <div class="field hidden" id="pHintField">
+            <label for="pHintInput">私人密碼提示（自己睇,可以留白）</label>
+            <input type="text" id="pHintInput" placeholder="例如：細個養嗰隻狗 + 樓下門牌" autocomplete="off">
+          </div>
+          <div class="field hidden" id="pRecField">
+            <label for="pRecInput">私人救援碼</label>
+            <input type="text" id="pRecInput" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false">
+          </div>
+
+          <p class="hintshow hidden" id="pHintShow"></p>
+          <button class="btn" id="pUnlockBtn">開私人庫</button>
+          <div class="msg" id="pMsg"></div>
+
+          <div class="lock-foot">
+            <div><button id="pForgotBtn" type="button">🆘 唔記得私人密碼?用私人救援碼開返</button></div>
+            <div style="margin-top:6px;"><button id="pBackBtn" type="button">← 返品牌庫</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- 私人庫:內容 ---------- -->
+    <div id="personalView" class="hidden">
+      <div class="toolbar">
+        <input type="text" id="pSearch" placeholder="搵私人帳號…">
+        <button class="tbtn" id="pBtnAdd">＋ 加項目</button>
+        <button class="tbtn" id="pBtnBulk">📋 批量貼上</button>
+        <button class="tbtn" id="pBtnChangePw">改私人密碼</button>
+        <button class="tbtn" id="pBtnRecovery">🆘 私人救援碼</button>
+        <button class="tbtn" id="pBtnLock">🔒 收埋私人</button>
+      </div>
+      <div id="pList"></div>
+      <div class="warnbar">
+        🔐 呢邊嘅嘢用<b>私人密碼</b>另外加密一次 —— 就算有人開到品牌庫,都睇唔到呢度。<br>
+        ⏱ 五分鐘冇郁就自動收埋,唔會擺喺屏幕度。<br>
+        🆘 私人救援碼同主庫嗰個<b>唔同</b>,要另外抄低。冇密碼又冇救援碼＝呢邊真係開唔返。
+      </div>
+    </div>
+
     <div id="syncErr" class="errbar hidden"></div>
-    <div class="warnbar">
+    <div class="warnbar" id="brandWarn">
       🔗 呢個庫要「你嗰條完整連結」＋「主密碼」兩樣先開到。撳上面「我嘅連結」可以複製條 link 傳去手機。<br>
       🆘 唔記得主密碼?喺登入版撳「唔記得主密碼」,用開庫嗰陣抄低嗰串救援碼就開返到。<br>
       💾 記得偶然撳一次「備份」—— 備份檔入面連密鑰都有,萬一連結同部機都冇咗都救得返。
@@ -273,7 +392,8 @@
   var SUPABASE_KEY = 'sb_publishable_l2VM6-NBoj3q6KbakOsB9A_iIyoUu4-';
   var TABLE   = 'vault';
   var K_STORE = 'acct_vault_key';     // 部機記住條密鑰
-  var IDLE_MS = 10 * 60 * 1000;
+  var IDLE_MS   = 10 * 60 * 1000;
+  var P_IDLE_MS = 5 * 60 * 1000;      // 私人庫收得快啲
   var ITER    = 600000;
   var MIN_PW  = 8;
 
@@ -281,11 +401,20 @@
   var rowId     = null;   // 由密鑰推導,人哋估唔到
   var masterPw  = null;
   var dek       = null;   // 資料鎖匙(解鎖期間先喺記憶體)
-  var envelope  = null;   // {v,hint,data,wrapPw,wrapRec}
+  var envelope  = null;   // {v,hint,data,wrapPw,wrapRec,pHint,pdata,pWrapPw,pWrapRec}
   var data      = null;
   var saveTimer = null, idleTimer = null, hintTimer = null;
   var pendingImport = null;
   var isFirstRun = false;
+
+  /* 私人庫:自己一條 DEK、自己一個密碼、自己一個救援碼。
+     主密碼開唔到呢邊 —— envelope.pdata 冇 pdek 就淨係一嚿亂碼。 */
+  var pdek     = null;
+  var pdata    = null;    // {items:[...]}
+  var pPwCur   = null;    // 解鎖期間記住,淨係用嚟核對「改私人密碼」
+  var pIdleTimer = null;
+  var freshPRecCode = null;
+  var view     = 'brand'; // 'brand' | 'personal'
 
   /* ================= 預設內容 ================= */
   var DEFAULT_ACCOUNTS = [
@@ -306,6 +435,43 @@
     {icon:'🛒', title:'Shopify'},     {icon:'🌐', title:'網站後台'},
     {icon:'🎨', title:'Canva'},       {icon:'🔗', title:'其他'}
   ];
+
+  /* 私人庫嘅分類。揀邊類就自動出嗰類慣常要填嘅欄位,之後隨時加減同改名。 */
+  var CATS = [
+    {key:'bank', icon:'🏦', name:'銀行 / 金融', fields:[
+      {label:'登入 ID',   secret:false},
+      {label:'密碼',      secret:true},
+      {label:'戶口號碼',  secret:true},
+      {label:'卡尾 4 位', secret:false},
+      {label:'保安問題',  secret:true},
+      {label:'客服電話',  secret:false}
+    ]},
+    {key:'social', icon:'🌐', name:'社交 / 網上服務', fields:[
+      {label:'帳號 / 電郵', secret:false},
+      {label:'密碼',        secret:true},
+      {label:'雙重驗證',    secret:false}
+    ]},
+    {key:'member', icon:'💳', name:'會員 / 儲值卡', fields:[
+      {label:'會員號碼', secret:false},
+      {label:'電話',     secret:false},
+      {label:'電郵',     secret:false},
+      {label:'密碼',     secret:true}
+    ]},
+    {key:'other', icon:'🔑', name:'其他', fields:[
+      {label:'帳號', secret:false},
+      {label:'密碼', secret:true}
+    ]}
+  ];
+  function catOf(key){
+    for(var i=0;i<CATS.length;i++) if(CATS[i].key === key) return CATS[i];
+    return CATS[CATS.length-1];
+  }
+  function newPField(f){ return {id:uid(), label:f.label, value:'', secret:!!f.secret}; }
+  function newPItem(catKey, title){
+    var c = catOf(catKey);
+    return {id:uid(), cat:c.key, icon:c.icon, title:title,
+            fields:c.fields.map(newPField), note:''};
+  }
 
   /* ================= 小工具 ================= */
   function $(id){ return document.getElementById(id); }
@@ -616,6 +782,36 @@
     });
   }
 
+  /* 私人庫嘅鎖。加個前綴做域分隔:就算私人密碼同主密碼打成一樣,
+     兩邊嘅 wrap 都唔會互通。 */
+  function pPass(pw){ return 'personal|' + pw; }
+  function openPEnvelope(env, passphrase, which){
+    var wrapped = (which === 'rec') ? env.pWrapRec : env.pWrapPw;
+    if(!wrapped) return Promise.reject(new Error(which === 'rec' ? '私人庫未設過救援碼' : '私人庫未設定'));
+    return unwrapDEK(wrapped, pPass(passphrase)).then(function(k){
+      if(!env.pdata) return {pdek:k, obj:{items:[]}};
+      return decryptWithDEK(env.pdata, k).then(function(obj){ return {pdek:k, obj:obj}; });
+    });
+  }
+  function normalizeP(obj){
+    if(!obj || !Array.isArray(obj.items)) return {items:[]};
+    obj.items.forEach(function(it){
+      if(!it.id) it.id = uid();
+      it.cat   = it.cat || 'other';
+      it.icon  = it.icon || catOf(it.cat).icon;
+      it.title = it.title || '未命名';
+      it.note  = it.note || '';
+      if(!Array.isArray(it.fields)) it.fields = [];
+      it.fields.forEach(function(f){
+        if(!f.id) f.id = uid();
+        f.label  = f.label || '欄位';
+        f.value  = f.value || '';
+        f.secret = !!f.secret;
+      });
+    });
+    return obj;
+  }
+
   function doUnlock(){
     var p1 = pw1.value;
     lockMsg.className='msg'; lockMsg.textContent='';
@@ -774,8 +970,12 @@
   /* ================= 儲存 ================= */
   function save(){
     if(!dek || !data || !envelope) return Promise.resolve();
-    return encryptWithDEK(data, dek).then(function(blob){
-      envelope.data = blob;
+    var jobs = [ encryptWithDEK(data, dek).then(function(blob){ envelope.data = blob; }) ];
+    // 私人庫鎖住嗰陣冇 pdek,就唔好郁 envelope.pdata —— 讀唔到嘅嘢唔可以重寫
+    if(pdek && pdata){
+      jobs.push(encryptWithDEK(pdata, pdek).then(function(blob){ envelope.pdata = blob; }));
+    }
+    return Promise.all(jobs).then(function(){
       return sbUpsert(envelope);
     }).then(function(){
       $('syncErr').classList.add('hidden');
@@ -806,15 +1006,24 @@
     $('lockScreen').classList.add('hidden');
     $('vaultScreen').classList.remove('hidden');
     pw1.value=''; pw2.value=''; lockMsg.textContent='';
-    render();
+    setView('brand');
     resetIdle();
     if(showKeyCard) linkModal(true);
   }
   function lock(){
-    clearTimeout(saveTimer); clearTimeout(idleTimer);
+    clearTimeout(saveTimer); clearTimeout(idleTimer); clearTimeout(pIdleTimer);
     var hint = envelope && envelope.hint;
     masterPw = null; dek = null; data = null; envelope = null; freshRecCode = null;
+    pdek = null; pdata = null; freshPRecCode = null; pPwCur = null;
     $('acctList').innerHTML = '';
+    $('pList').innerHTML = '';
+    closeBulkModal();
+    $('pPw1').value=''; $('pPw2').value=''; $('pRecInput').value=''; $('pHintInput').value='';
+    $('pMsg').className='msg'; $('pMsg').textContent='';
+    $('personalGate').classList.add('hidden');
+    $('personalView').classList.add('hidden');
+    $('brandView').classList.remove('hidden');
+    view = 'brand';
     $('vaultScreen').classList.add('hidden');
     $('lockScreen').classList.remove('hidden');
     pw1.value=''; pw2.value=''; $('recInput').value=''; $('hintInput').value='';
@@ -849,8 +1058,17 @@
     clearTimeout(idleTimer);
     if(masterPw) idleTimer = setTimeout(lock, IDLE_MS);
   }
+  function resetPIdle(){
+    clearTimeout(pIdleTimer);
+    if(pdek) pIdleTimer = setTimeout(function(){
+      lockPersonal(); flash('私人庫已自動收埋');
+    }, P_IDLE_MS);
+  }
   ['click','keydown','mousemove','touchstart'].forEach(function(ev){
-    document.addEventListener(ev, function(){ if(masterPw) resetIdle(); }, {passive:true});
+    document.addEventListener(ev, function(){
+      if(masterPw) resetIdle();
+      if(pdek) resetPIdle();
+    }, {passive:true});
   });
 
   /* ================= 畫面 ================= */
@@ -1069,6 +1287,652 @@
     return Promise.resolve();
   }
 
+  /* ================= Abby's 私人庫 ================= */
+  var pPw1 = $('pPw1'), pPw2 = $('pPw2');
+  var pMsg = $('pMsg'), pUnlockBtn = $('pUnlockBtn');
+  var pMode = 'unlock';                 // 'setup' | 'unlock' | 'recover'
+  var pOpenSet = {}, pGroupShut = {};
+
+  /* 鎖庫嗰陣要抹走批量貼上個框(入面成堆明文)。
+     但唔可以連救援碼個彈窗都掃走 —— 嗰串碼淨係顯示一次,清咗就真係冇。 */
+  function closeBulkModal(){
+    if($('bulkIn')){ $('bulkIn').value = ''; $('modalHost').innerHTML = ''; }
+  }
+
+  function pErr(t){ pMsg.className='msg err'; pMsg.textContent = t; }
+  function pOk(t){ pMsg.className='msg ok'; pMsg.textContent = t; }
+
+  function setView(v){
+    view = v;
+    var personal = (v === 'personal');
+    $('brandView').classList.toggle('hidden', personal);
+    $('brandWarn').classList.toggle('hidden', personal);
+    $('btnChangePw').classList.toggle('hidden', personal);
+    $('btnRecovery').classList.toggle('hidden', personal);
+    $('btnPersonal').textContent = personal ? '🏢 品牌庫' : '👤 Abby\'s';
+
+    if(!personal){
+      $('personalGate').classList.add('hidden');
+      $('personalView').classList.add('hidden');
+      $('heroTitle').innerHTML = '帳號<span class="accent">密碼庫</span>';
+      render();
+      return;
+    }
+    $('heroTitle').innerHTML = 'Abby\'s <span class="accent">私人庫</span>';
+    if(pdek){
+      $('personalGate').classList.add('hidden');
+      $('personalView').classList.remove('hidden');
+      renderP();
+      resetPIdle();
+    }else{
+      $('personalView').classList.add('hidden');
+      $('personalGate').classList.remove('hidden');
+      var setUp = !!(envelope && envelope.pWrapPw);
+      $('heroSub').textContent = setUp ? '🔒 鎖住咗 · 要輸入私人密碼' : '仲未開過 · 撳下面建立';
+      pGateMode(setUp ? 'unlock' : 'setup');
+    }
+  }
+
+  function pGateMode(mode){
+    pMode = mode;
+    pMsg.className='msg'; pMsg.textContent='';
+    pPw1.value=''; pPw2.value=''; $('pRecInput').value='';
+    $('pMatchHint').textContent=''; $('pMatchHint').className='matchhint';
+    $('pMeterBar').style.width='0';
+    var setup = (mode === 'setup'), recover = (mode === 'recover');
+    $('pPw2Field').classList.toggle('hidden', !(setup || recover));
+    $('pHintField').classList.toggle('hidden', !setup);
+    $('pRecField').classList.toggle('hidden', !recover);
+    $('pMeterWrap').classList.toggle('hidden', !(setup || recover));
+    $('pMeterTxt').classList.toggle('hidden', !(setup || recover));
+    $('pForgotBtn').classList.toggle('hidden', mode !== 'unlock');
+    [].forEach.call(document.querySelectorAll('#personalGate .pw-eye'), function(b){
+      $(b.getAttribute('data-for')).type = 'password';
+      b.classList.remove('on'); b.textContent = '👁';
+    });
+
+    if(setup){
+      $('pTitle').textContent = '第一次開私人庫';
+      $('pDesc').textContent  = '呢邊放你自己啲嘢 —— 社交、銀行、會員卡。用一個同主密碼唔同嘅密碼再鎖多重,設定完會俾一串私人救援碼你,記得抄低。';
+      $('pPw1Label').textContent = '私人密碼';
+      pUnlockBtn.textContent = '建立私人庫';
+      $('pHintShow').classList.add('hidden');
+    }else if(recover){
+      $('pTitle').textContent = '用私人救援碼開返';
+      $('pDesc').textContent  = '輸入開私人庫嗰陣抄低嗰串 25 位私人救援碼,順便設個新私人密碼。（呢串同主庫嗰串唔同）';
+      $('pPw1Label').textContent = '新私人密碼';
+      pUnlockBtn.textContent = '重設私人密碼';
+      $('pHintShow').classList.add('hidden');
+    }else{
+      $('pTitle').textContent = 'Abby\'s 私人庫';
+      $('pDesc').textContent  = '呢邊用另一個密碼鎖住,主密碼開唔到。';
+      $('pPw1Label').textContent = '私人密碼';
+      pUnlockBtn.textContent = '開私人庫';
+      var h = envelope && envelope.pHint;
+      if(h){
+        $('pHintShow').textContent = '💡 你嘅提示：' + h;
+        $('pHintShow').classList.remove('hidden');
+      }else{
+        $('pHintShow').classList.add('hidden');
+      }
+    }
+    pPw1.focus();
+  }
+
+  function doPersonal(){
+    var p1 = pPw1.value;
+    pMsg.className='msg'; pMsg.textContent='';
+    if(!envelope) return pErr('要先開咗個庫先。');
+
+    /* ---- 第一次建立私人庫 ---- */
+    if(pMode === 'setup'){
+      if(p1.length < MIN_PW) return pErr('私人密碼至少 ' + MIN_PW + ' 個字元(建議 12 個以上)');
+      if(p1 !== pPw2.value)  return pErr('兩次輸入唔一樣');
+      if(p1 === masterPw)    return pErr('唔好同主密碼一樣 —— 咁樣就冇咗第二重鎖嘅意義');
+      pUnlockBtn.disabled = true; pOk('建立緊…');
+      var code = genRecoveryCode();
+      genDEK().then(function(k){
+        return Promise.all([k, wrapDEK(k, pPass(p1)), wrapDEK(k, pPass(normRec(code)))]);
+      }).then(function(r){
+        pdek = r[0]; pdata = {items:[]}; pPwCur = p1;
+        envelope.v = 4;
+        envelope.pWrapPw  = r[1];
+        envelope.pWrapRec = r[2];
+        envelope.pHint    = ($('pHintInput').value || '').trim();
+        return save();
+      }).then(function(){
+        pUnlockBtn.disabled = false;
+        freshPRecCode = code;
+        setView('personal');
+        recoveryModal(code, false, '私人庫');
+      }).catch(function(e){
+        pUnlockBtn.disabled = false;
+        pdek = null; pdata = null; pPwCur = null;
+        pErr('建立失敗:' + e.message);
+        console.error(e);
+      });
+      return;
+    }
+
+    /* ---- 用私人救援碼開返 ---- */
+    if(pMode === 'recover'){
+      var rec = normRec($('pRecInput').value);
+      if(rec.length < 25)    return pErr('請輸入完整 25 位私人救援碼');
+      if(p1.length < MIN_PW) return pErr('新私人密碼至少 ' + MIN_PW + ' 個字元');
+      if(p1 !== pPw2.value)  return pErr('兩次輸入唔一樣');
+      if(p1 === masterPw)    return pErr('唔好同主密碼一樣');
+      pUnlockBtn.disabled = true; pOk('核對私人救援碼…');
+      openPEnvelope(envelope, rec, 'rec').then(function(r){
+        pdek = r.pdek; pdata = normalizeP(r.obj); pPwCur = p1;
+        return wrapDEK(pdek, pPass(p1));       // 用新私人密碼重新上鎖
+      }).then(function(w){
+        envelope.pWrapPw = w;
+        return save();
+      }).then(function(){
+        pUnlockBtn.disabled = false;
+        setView('personal');
+        alert('私人密碼已重設。你原本嗰個私人救援碼仲有效,想換就撳「🆘 私人救援碼」。');
+      }).catch(function(e){
+        pUnlockBtn.disabled = false;
+        pdek = null; pdata = null; pPwCur = null;
+        pErr(/未設過/.test(e.message) ? e.message : '私人救援碼唔啱');
+        console.error(e);
+      });
+      return;
+    }
+
+    /* ---- 平時開私人庫 ---- */
+    if(!p1) return pErr('請輸入私人密碼');
+    pUnlockBtn.disabled = true; pOk('解密緊…');
+    openPEnvelope(envelope, p1, 'pw').then(function(r){
+      pdek = r.pdek; pdata = normalizeP(r.obj); pPwCur = p1;
+      pUnlockBtn.disabled = false;
+      setView('personal');
+    }).catch(function(e){
+      pUnlockBtn.disabled = false;
+      pErr(/未設定/.test(e.message) ? e.message : '私人密碼唔啱');
+      console.error(e);
+    });
+  }
+
+  function lockPersonal(){
+    clearTimeout(pIdleTimer);
+    return flushSave().then(function(){
+      pdek = null; pdata = null; pPwCur = null; freshPRecCode = null;
+      $('pList').innerHTML = '';
+      closeBulkModal();
+      pPw1.value=''; pPw2.value='';
+      if(view === 'personal') setView('brand');
+    });
+  }
+
+  /* ---- 畫面 ---- */
+  function pMatch(it, q){
+    if(it.title.toLowerCase().indexOf(q) > -1) return true;
+    if(catOf(it.cat).name.toLowerCase().indexOf(q) > -1) return true;
+    if((it.note || '').toLowerCase().indexOf(q) > -1) return true;
+    return it.fields.some(function(f){
+      if(f.label.toLowerCase().indexOf(q) > -1) return true;
+      return !f.secret && f.value.toLowerCase().indexOf(q) > -1;   // 機密欄位唔攞嚟比對
+    });
+  }
+
+  function renderP(){
+    var host = $('pList');
+    host.innerHTML = '';
+    if(!pdata) return;
+    var q = ($('pSearch').value || '').trim().toLowerCase();
+    var shown = 0;
+
+    CATS.forEach(function(c){
+      var items = pdata.items.filter(function(it){ return it.cat === c.key; });
+      if(q) items = items.filter(function(it){ return pMatch(it, q); });
+      if(!items.length) return;
+      shown += items.length;
+
+      var g = document.createElement('div');
+      g.className = 'pgroup' + ((q || !pGroupShut[c.key]) ? ' open' : '');
+
+      var gh = document.createElement('div');
+      gh.className = 'pgroup-head';
+      var chev = document.createElement('span');
+      chev.className = 'chev'; chev.textContent = '▶';
+      var gname = document.createElement('span');
+      gname.className = 'pgroup-name';
+      gname.textContent = c.icon + ' ' + c.name + ' · ' + items.length;
+      var gline = document.createElement('span');
+      gline.className = 'pgroup-line';
+      gh.appendChild(chev); gh.appendChild(gname); gh.appendChild(gline);
+      gh.addEventListener('click', function(){
+        pGroupShut[c.key] = g.classList.contains('open');
+        g.classList.toggle('open');
+      });
+      g.appendChild(gh);
+
+      var gb = document.createElement('div');
+      gb.className = 'pgroup-body';
+      items.forEach(function(it){ gb.appendChild(pItemCard(it)); });
+      g.appendChild(gb);
+      host.appendChild(g);
+    });
+
+    if(!shown){
+      var e = document.createElement('div');
+      e.className = 'pempty';
+      e.textContent = q ? '搵唔到相關項目。'
+        : '仲未有嘢。撳上面「＋ 加項目」開始 —— 揀咗分類就會自動出返嗰類慣常要填嘅欄位。';
+      host.appendChild(e);
+    }
+    updateHeroP();
+  }
+
+  function updateHeroP(){
+    if(!pdata) return;
+    var total = 0, filled = 0;
+    pdata.items.forEach(function(it){
+      it.fields.forEach(function(f){ total++; if(f.value) filled++; });
+    });
+    $('heroSub').textContent = pdata.items.length + ' 個項目 · ' + filled + '/' + total + ' 格已填';
+  }
+
+  function pItemCard(it){
+    var box = document.createElement('div');
+    box.className = 'pitem' + (pOpenSet[it.id] ? ' open' : '');
+
+    var head = document.createElement('div');
+    head.className = 'pitem-head';
+    var chev = document.createElement('span');
+    chev.className = 'chev'; chev.textContent = '▶';
+    head.appendChild(chev);
+
+    var ico = document.createElement('span');
+    ico.className = 'pitem-ico'; ico.textContent = it.icon;
+    head.appendChild(ico);
+
+    var name = document.createElement('div');
+    name.className = 'pitem-name'; name.textContent = it.title;
+    head.appendChild(name);
+
+    var meta = document.createElement('span');
+    meta.className = 'acct-meta';
+    meta.textContent = it.fields.filter(function(f){ return f.value; }).length + '/' + it.fields.length;
+    head.appendChild(meta);
+
+    var edit = document.createElement('button');
+    edit.className = 'acct-edit'; edit.textContent = '✏️'; edit.title = '改名';
+    edit.addEventListener('click', function(e){
+      e.stopPropagation();
+      var v = prompt('改名', it.title);
+      if(v !== null && v.trim()){ it.title = v.trim(); queueSave(); renderP(); }
+    });
+    head.appendChild(edit);
+
+    head.addEventListener('click', function(){
+      pOpenSet[it.id] = !box.classList.contains('open');
+      box.classList.toggle('open');
+    });
+    box.appendChild(head);
+
+    var body = document.createElement('div');
+    body.className = 'pitem-body';
+    it.fields.forEach(function(f){ body.appendChild(pFieldRow(it, f)); });
+
+    var noteWrap = document.createElement('div');
+    noteWrap.className = 'plat-note';
+    var note = document.createElement('textarea');
+    note.rows = 1; note.value = it.note;
+    note.placeholder = '備註:分行、綁定電話、保安提示、續期日…';
+    note.addEventListener('input', function(){ it.note = note.value; queueSave(); });
+    noteWrap.appendChild(note);
+    body.appendChild(noteWrap);
+
+    var add = document.createElement('div');
+    add.className = 'addrow';
+    [['＋ 加欄位', false], ['＋ 加機密欄位', true]].forEach(function(pair){
+      var b = document.createElement('button');
+      b.className = 'mini'; b.textContent = pair[0];
+      b.addEventListener('click', function(){ addPField(it, pair[1]); });
+      add.appendChild(b);
+    });
+    var delIt = document.createElement('button');
+    delIt.className = 'mini'; delIt.textContent = '刪除呢個項目';
+    delIt.addEventListener('click', function(){
+      if(confirm('確定刪除「' + it.title + '」同埋入面所有欄位?')){
+        pdata.items = pdata.items.filter(function(x){ return x.id !== it.id; });
+        queueSave(); renderP();
+      }
+    });
+    add.appendChild(delIt);
+    body.appendChild(add);
+
+    box.appendChild(body);
+    return box;
+  }
+
+  function addPField(it, secret){
+    var label = prompt(secret ? '新機密欄位嘅名（例如「PIN」「保安碼」）:'
+                              : '新欄位嘅名（例如「分行」「到期日」）:');
+    if(label === null) return;
+    label = label.trim(); if(!label) return;
+    it.fields.push({id:uid(), label:label, value:'', secret:!!secret});
+    pOpenSet[it.id] = true;
+    queueSave(); renderP();
+  }
+
+  function pFieldRow(it, f){
+    var row = document.createElement('div');
+    row.className = 'row prow';
+
+    var lab = document.createElement('input');
+    lab.type = 'text';
+    lab.className = 'plabel' + (f.secret ? ' psecret' : '');
+    lab.value = f.label; lab.title = '可以改欄位名';
+    lab.addEventListener('input', function(){ f.label = lab.value; queueSave(); });
+    row.appendChild(lab);
+
+    var input = document.createElement('input');
+    input.type = f.secret ? 'password' : 'text';
+    input.value = f.value; input.autocomplete = 'off'; input.spellcheck = false;
+    input.addEventListener('input', function(){ f.value = input.value; queueSave(); updateHeroP(); });
+    row.appendChild(input);
+
+    var actions = document.createElement('div'); actions.className = 'actions';
+    if(f.secret){
+      var eye = document.createElement('button');
+      eye.className = 'mini'; eye.textContent = '👁'; eye.title = '顯示 / 隱藏';
+      eye.addEventListener('click', function(){
+        input.type = (input.type === 'password') ? 'text' : 'password';
+      });
+      actions.appendChild(eye);
+    }
+    var copy = document.createElement('button');
+    copy.className = 'mini'; copy.textContent = '複製';
+    copy.addEventListener('click', function(){
+      copyText(input.value).then(function(){
+        copy.textContent = '✓'; copy.classList.add('copied');
+        setTimeout(function(){ copy.textContent = '複製'; copy.classList.remove('copied'); }, 1200);
+      });
+    });
+    actions.appendChild(copy);
+    var del = document.createElement('button');
+    del.className = 'pdel'; del.textContent = '✕'; del.title = '刪除呢個欄位';
+    del.addEventListener('click', function(){
+      if(confirm('刪除欄位「' + f.label + '」?')){
+        it.fields = it.fields.filter(function(x){ return x.id !== f.id; });
+        queueSave(); renderP();
+      }
+    });
+    actions.appendChild(del);
+    row.appendChild(actions);
+    return row;
+  }
+
+  /* ---- 批量貼上 ----
+     一次過貼一大段落入嚟,喺瀏覽器度自己拆。原則:寧願分錯類,都唔可以漏咗一行 ——
+     認唔出嘅一律掉落備註,之後自己執。 */
+  function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+  function isUrl(s){ return /^https?:\/\//i.test(s); }
+  function isDigits(s){ return /^\d{6,16}$/.test(s); }
+  function hasCJK(s){ return /[一-鿿]/.test(s); }
+
+  var CAT_HINTS = [
+    ['bank',   /bank|銀行|中銀|滙豐|匯豐|hsbc|恒生|pay\b|payme|stripe|ibkr|盈透|保誠|prudential|empf|mpf|強積金|公積金|學資處|財務|信用卡|credit|visa|master|轉數快|fps|券商|證券/i],
+    ['social', /facebook|\bfb\b|meta|instagram|\big\b|threads|tiktok|抖音|小紅書|youtube|google|gmail|hotmail|outlook|yahoo|whatsapp|wechat|微信|telegram|\bline\b|apple|icloud|twitter|linkedin/i],
+    ['member', /starbucks|星巴克|cathay|國泰|會員|member|club|中國移動|csl|smartone|3hk|八達通|octopus|健身|fitness|里數|積分/i]
+  ];
+  function guessCat(text){
+    for(var i = 0; i < CAT_HINTS.length; i++){
+      if(CAT_HINTS[i][1].test(text)) return CAT_HINTS[i][0];
+    }
+    return 'other';
+  }
+
+  function parseBulk(text){
+    var blocks = String(text || '').replace(/\r/g, '').split(/\n{2,}/);
+    var out = [];
+    blocks.forEach(function(block){
+      var lines = block.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+      if(!lines.length) return;
+
+      // 第一行如果本身就係電郵 / 網址 / 一串號碼,咁就當呢一嚿冇標題
+      var title = '', rest = lines;
+      if(!isEmail(lines[0]) && !isUrl(lines[0]) && !isDigits(lines[0])){
+        title = lines[0]; rest = lines.slice(1);
+      }
+
+      var fields = [], notes = [], plain = [], m;
+      rest.forEach(function(ln){
+        if(isUrl(ln))    { fields.push({label:'網址', value:ln, secret:false}); return; }
+        if(isEmail(ln))  { fields.push({label:'電郵', value:ln, secret:false}); return; }
+        if(isDigits(ln)) { fields.push({label:'號碼', value:ln, secret:false}); return; }
+        m = ln.match(/^(.{1,12}?)\s*[:：]\s*(.+)$/);                  // 「Pw: xxx」「eMPF ID : xxx」
+        if(m){
+          fields.push({label:m[1].trim(), value:m[2].trim(),
+                       secret:/pw|pass|密碼|碼$/i.test(m[1])});
+          return;
+        }
+        m = ln.match(/^([A-Za-z一-鿿][\w一-鿿 .]{0,14}?)\s+(\d{6,})$/);  // 「WhatsApp 61234567」咁嘅格式
+        if(m){ fields.push({label:m[1].trim(), value:m[2], secret:false}); return; }
+        if(hasCJK(ln) || /\s/.test(ln)){ notes.push(ln); return; }    // 中文句子 / 有空格 → 備註,唔猜
+        plain.push(ln);
+      });
+
+      // 剩低嘅純字串:得一個當密碼;兩個或以上 → 頭嗰個係帳號、尾嗰個係密碼,中間嗰啲當機密
+      if(plain.length === 1){
+        fields.push({label:'密碼', value:plain[0], secret:true});
+      }else if(plain.length > 1){
+        fields.push({label:'帳號 / ID', value:plain[0], secret:false});
+        for(var i = 1; i < plain.length - 1; i++){
+          fields.push({label:'其他', value:plain[i], secret:true});
+        }
+        fields.push({label:'密碼', value:plain[plain.length - 1], secret:true});
+      }
+
+      if(!title){
+        var first = fields[0];
+        title = first ? first.value : '未命名';
+      }
+      // 淨得個標題、冇帳號冇密碼嗰啲(例如「Facebook meta」)照樣要留低,
+      // 唔可以靜靜雞丟咗 —— 之後會俾返該分類嘅空白欄位佢填
+      if(!fields.length && !notes.length && !title) return;
+      out.push({ title:title, cat:guessCat(title + ' ' + notes.join(' ')),
+                 fields:fields, note:notes.join('\n') });
+    });
+    return out;
+  }
+
+  function bulkModal(){
+    var host = $('modalHost');
+    var parsed = [];
+    host.innerHTML =
+      '<div class="modal"><div class="modal-card">' +
+        '<h3>📋 批量貼上</h3>' +
+        '<p>一次過貼落嚟,<b>每個項目之間空一行</b>。全程喺你部機處理,一撳「加入」就即刻加密 —— ' +
+        '冇任何嘢會出去。認唔出嘅行唔會掉咗,會擺入備註等你自己執。</p>' +
+        '<textarea class="bulk-ta" id="bulkIn" spellcheck="false" autocomplete="off" placeholder="Instagram\nabby@example.com\n個密碼\n\n恒生\n登入名\n個密碼\n開戶分行喺旺角"></textarea>' +
+        '<div class="bulk-list hidden" id="bulkList"></div>' +
+        '<p class="bsum hidden" id="bulkSum"></p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">' +
+          '<button class="btn" id="bParse" style="flex:1;min-width:120px;">解析睇下</button>' +
+          '<button class="btn hidden" id="bAdd" style="flex:1;min-width:120px;background:var(--ok);">加入</button>' +
+          '<button class="btn" id="bClose" style="flex:1;min-width:100px;background:var(--ink-soft);">取消</button>' +
+        '</div>' +
+      '</div></div>';
+
+    function shut(){
+      $('bulkIn').value = '';      // 唔好留住明文喺 DOM
+      parsed = [];
+      host.innerHTML = '';
+    }
+
+    function renderPreview(){
+      var list = $('bulkList');
+      list.innerHTML = '';
+      parsed.forEach(function(it, idx){
+        var row = document.createElement('div');
+        row.className = 'brow';
+
+        var top = document.createElement('div');
+        top.className = 'btop';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = it.use !== false;
+        cb.addEventListener('change', function(){ it.use = cb.checked; updateSum(); });
+        var ti = document.createElement('input');
+        ti.type = 'text'; ti.className = 'btitle'; ti.value = it.title;
+        ti.addEventListener('input', function(){ it.title = ti.value; });
+        top.appendChild(cb); top.appendChild(ti);
+        row.appendChild(top);
+
+        var bot = document.createElement('div');
+        bot.className = 'bbot';
+        var sel = document.createElement('select');
+        CATS.forEach(function(c){
+          var o = document.createElement('option');
+          o.value = c.key; o.textContent = c.icon + ' ' + c.name;
+          if(c.key === it.cat) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener('change', function(){ it.cat = sel.value; });
+        bot.appendChild(sel);
+
+        var meta = document.createElement('span');
+        meta.className = 'bmeta';
+        // 只講欄位名,唔顯示任何值 —— 唔好喺屏幕度攤開你啲密碼
+        meta.textContent = it.fields.length + ' 欄:' +
+          it.fields.map(function(f){ return f.label; }).join('、') +
+          (it.note ? ' ＋備註' : '');
+        bot.appendChild(meta);
+
+        if(pdata.items.some(function(x){ return x.title === it.title; })){
+          var dup = document.createElement('span');
+          dup.className = 'bdup'; dup.textContent = '已有同名';
+          bot.appendChild(dup);
+        }
+        row.appendChild(bot);
+        list.appendChild(row);
+      });
+      list.classList.remove('hidden');
+    }
+
+    function updateSum(){
+      var n = parsed.filter(function(x){ return x.use !== false; }).length;
+      $('bulkSum').textContent = '揀咗 ' + n + ' / ' + parsed.length + ' 個項目。撳「加入」就會加密存起。';
+      $('bulkSum').classList.remove('hidden');
+      $('bAdd').textContent = '加入 ' + n + ' 個';
+      $('bAdd').disabled = n === 0;
+    }
+
+    $('bParse').addEventListener('click', function(){
+      parsed = parseBulk($('bulkIn').value);
+      if(!parsed.length){ alert('拆唔到嘢出嚟。記住每個項目之間要空一行。'); return; }
+      parsed.forEach(function(it){ it.use = true; });
+      renderPreview(); updateSum();
+      $('bAdd').classList.remove('hidden');
+      $('bParse').textContent = '再解析一次';
+    });
+
+    $('bAdd').addEventListener('click', function(){
+      var picked = parsed.filter(function(x){ return x.use !== false; });
+      if(!picked.length) return;
+      picked.forEach(function(it){
+        var item = newPItem(it.cat, (it.title || '未命名').trim());
+        // 拆唔到欄位嗰啲,就留返該分類嘅預設空欄位俾你自己填
+        if(it.fields.length){
+          item.fields = it.fields.map(function(f){
+            return {id:uid(), label:f.label, value:f.value, secret:!!f.secret};
+          });
+        }
+        item.note = it.note || '';
+        pdata.items.push(item);
+        pGroupShut[it.cat] = false;
+      });
+      var n = picked.length;
+      shut();
+      queueSave(); renderP();
+      flash('加咗 ' + n + ' 個項目');
+    });
+
+    $('bClose').addEventListener('click', shut);
+    $('bulkIn').focus();
+  }
+  $('pBtnBulk').addEventListener('click', bulkModal);
+
+  /* ---- 接線 ---- */
+  $('btnPersonal').addEventListener('click', function(){
+    setView(view === 'personal' ? 'brand' : 'personal');
+  });
+  $('pBackBtn').addEventListener('click', function(){ setView('brand'); });
+  $('pForgotBtn').addEventListener('click', function(){ pGateMode('recover'); });
+  pUnlockBtn.addEventListener('click', doPersonal);
+
+  function pCheckMatch(){
+    var el = $('pMatchHint');
+    if($('pPw2Field').classList.contains('hidden') || !pPw2.value){
+      el.textContent = ''; el.className = 'matchhint'; return;
+    }
+    if(pPw1.value === pPw2.value){ el.className='matchhint ok'; el.textContent='✓ 兩次一樣'; }
+    else{ el.className='matchhint no'; el.textContent='✕ 兩次唔一樣'; }
+  }
+  [pPw1, pPw2].forEach(function(el){
+    el.addEventListener('input', pCheckMatch);
+    el.addEventListener('keydown', function(e){ if(e.key === 'Enter') doPersonal(); });
+  });
+  pPw1.addEventListener('input', function(){
+    if(pMode === 'unlock') return;
+    var s = pwScore(pPw1.value);
+    $('pMeterBar').style.width = [8,25,45,65,85,100][s] + '%';
+    $('pMeterBar').style.background = s<=1 ? '#B3402E' : (s<=3 ? '#E29A3D' : '#2E7D5B');
+    $('pMeterTxt').textContent = '強度:' + ['太弱','弱','麻麻','OK','夠好','好強'][s] + ' · 一定要同主密碼唔同';
+  });
+
+  $('pSearch').addEventListener('input', renderP);
+  $('pBtnAdd').addEventListener('click', function(){
+    var list = CATS.map(function(c,i){ return (i+1) + '. ' + c.icon + ' ' + c.name; }).join('\n');
+    var pick = prompt('揀分類（輸入數字）:\n\n' + list);
+    if(pick === null) return;
+    var n = parseInt((pick || '').trim(), 10);
+    if(isNaN(n) || n < 1 || n > CATS.length) return;
+    var c = CATS[n-1];
+    var name = prompt('個名（例如「恒生」「Instagram 私人」「Marathon 會員」）:');
+    if(name === null || !name.trim()) return;
+    var it = newPItem(c.key, name.trim());
+    pdata.items.push(it);
+    pOpenSet[it.id] = true; pGroupShut[c.key] = false;
+    queueSave(); renderP();
+  });
+  $('pBtnLock').addEventListener('click', function(){ lockPersonal(); });
+
+  $('pBtnChangePw').addEventListener('click', function(){
+    var cur = prompt('先輸入而家嘅私人密碼:');
+    if(cur === null) return;
+    if(cur !== pPwCur){ alert('密碼唔啱。'); return; }
+    var np = prompt('新私人密碼(至少 ' + MIN_PW + ' 個字元,建議 12 個以上):');
+    if(np === null) return;
+    if(np.length < MIN_PW){ alert('太短喇。'); return; }
+    if(np === masterPw){ alert('唔好同主密碼一樣。'); return; }
+    if(np !== prompt('再輸入一次新私人密碼:')){ alert('兩次唔一樣。'); return; }
+    wrapDEK(pdek, pPass(np)).then(function(w){
+      envelope.pWrapPw = w; pPwCur = np;
+      var h = prompt('順便更新私人密碼提示（可以留白）:', envelope.pHint || '');
+      if(h !== null) envelope.pHint = h.trim();
+      return save();
+    }).then(function(){
+      alert('私人密碼已更改。舊備份檔入面嘅私人庫仍然要用舊私人密碼開,記得重新備份一次。');
+    }).catch(function(e){ alert('更改失敗:' + e.message); });
+  });
+
+  $('pBtnRecovery').addEventListener('click', function(){
+    if(freshPRecCode){ recoveryModal(freshPRecCode, false, '私人庫'); return; }
+    if(!confirm('私人救援碼淨係顯示一次,已經睇唔返舊嗰個。\n要產生一個「新」私人救援碼嗎?（舊嗰個即刻作廢）')) return;
+    var code = genRecoveryCode();
+    wrapDEK(pdek, pPass(normRec(code))).then(function(w){
+      envelope.pWrapRec = w;
+      return save();
+    }).then(function(){
+      recoveryModal(code, true, '私人庫');
+    }).catch(function(e){ alert('產生失敗:' + e.message); });
+  });
+
   /* ================= 連結彈窗 ================= */
   function linkModal(first){
     var host = $('modalHost');
@@ -1114,11 +1978,13 @@
 
   /* ================= 備份 / 還原 ================= */
   $('btnExport').addEventListener('click', function(){
-    encryptWithDEK(data, dek).then(function(blob){
-      envelope.data = blob;
-      var out = { type:'account-vault-backup', v:3, k:secretKey, payload:envelope, exported:new Date().toISOString() };
-      var blob = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
-      var url = URL.createObjectURL(blob);
+    // 私人庫鎖住嗰陣,就照抄雲端嗰嚿 pdata 出去 —— 備份一樣係完整嘅
+    var jobs = [ encryptWithDEK(data, dek).then(function(b){ envelope.data = b; }) ];
+    if(pdek && pdata) jobs.push(encryptWithDEK(pdata, pdek).then(function(b){ envelope.pdata = b; }));
+    Promise.all(jobs).then(function(){
+      var out = { type:'account-vault-backup', v:4, k:secretKey, payload:envelope, exported:new Date().toISOString() };
+      var file = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
+      var url = URL.createObjectURL(file);
       var d = new Date();
       var stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
       var a = document.createElement('a');
@@ -1163,10 +2029,41 @@
         var saved = secretKey;
         if(pack.k) secretKey = pack.k;
         openEnvelope(env, pw, 'pw').then(function(r){
-          secretKey = saved;
-          if(!confirm('確定用備份覆蓋而家所有資料?')) return;
+          if(!confirm('確定用備份覆蓋而家所有資料?')){ secretKey = saved; return; }
           data = normalize(r.obj);
-          queueSave(); render(); flash('已還原');
+
+          // 備份檔冇私人庫,或者你唔想一齊還原 → 而家個私人庫原封不動
+          if(!env.pWrapPw){
+            secretKey = saved; queueSave(); render(); flash('已還原'); return;
+          }
+          var ppw = prompt('呢個備份檔仲有私人庫。輸入嗰陣嘅私人密碼一齊還原（撳取消就淨係還原品牌庫）:');
+          if(ppw === null || !ppw){
+            secretKey = saved; queueSave(); render(); flash('已還原（私人庫冇郁）'); return;
+          }
+          return openPEnvelope(env, ppw, 'pw').then(function(pr){
+            secretKey = saved;              // 由呢刻起用返自己條密鑰
+            pdek = pr.pdek; pdata = normalizeP(pr.obj); pPwCur = ppw;
+            // 備份檔嗰兩把鎖係跟住備份嗰條密鑰整嘅,要用返自己條密鑰重新上鎖
+            var nc = genRecoveryCode();
+            return Promise.all([wrapDEK(pdek, pPass(ppw)), wrapDEK(pdek, pPass(normRec(nc)))])
+              .then(function(w){
+                envelope.v = 4;
+                envelope.pWrapPw  = w[0];
+                envelope.pWrapRec = w[1];
+                envelope.pHint    = env.pHint || '';
+                return save().then(function(){
+                  render(); flash('已還原（連私人庫）');
+                  alert('私人庫已還原。因為重新上咗鎖,舊嘅私人救援碼作廢,下一版會俾張新嘅你抄低。');
+                  recoveryModal(nc, true, '私人庫');
+                });
+              });
+          }).catch(function(err){
+            secretKey = saved;
+            pdek = null; pdata = null; pPwCur = null;
+            alert('私人密碼唔啱,私人庫冇還原（品牌庫已經還原咗）。');
+            console.error(err);
+            queueSave(); render();
+          });
         }).catch(function(){
           secretKey = saved;
           alert('密碼唔啱,開唔到呢個備份檔。');
@@ -1196,14 +2093,17 @@
   });
 
   /* ================= 救援碼 ================= */
-  function recoveryModal(code, isNew){
+  function recoveryModal(code, isNew, scope){
+    var isP  = !!scope;
+    var name = isP ? '私人救援碼' : '救援碼';
     var host = $('modalHost');
     host.innerHTML =
       '<div class="modal"><div class="modal-card">' +
-        '<h3>🆘 你嘅救援碼</h3>' +
-        '<p>' + (isNew ? '舊嘅救援碼即刻失效。' : '') +
+        '<h3>🆘 你嘅' + name + '</h3>' +
+        '<p>' + (isNew ? '舊嘅' + name + '即刻失效。' : '') +
         '呢串碼<b>淨係顯示今次</b>,唔會存喺任何地方。抄低或者 print 出嚟擺屋企安全位置 —— ' +
-        '萬一唔記得主密碼,得佢救到你。</p>' +
+        '萬一唔記得' + (isP ? '私人密碼' : '主密碼') + ',得佢救到你。' +
+        (isP ? '<br><b>呢串同主庫嗰串唔同</b>,兩串都要分開收好。' : '') + '</p>' +
         '<div class="reccode" id="recText"></div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
           '<button class="btn" id="rCopy" style="flex:1;min-width:120px;">複製</button>' +
@@ -1219,12 +2119,18 @@
       var w = window.open('', '_blank');
       if(!w){ alert('瀏覽器擋咗新視窗,請改用「複製」。'); return; }
       w.document.write('<pre style="font:16px monospace;padding:40px;line-height:2">' +
-        '帳號密碼庫 · 救援碼\n\n' + code +
-        '\n\n（萬一唔記得主密碼,喺個庫嘅登入版撳「唔記得主密碼」再輸入呢串碼）\n' +
+        (isP ? 'Abby\'s 私人庫 · 私人救援碼' : '帳號密碼庫 · 救援碼') + '\n\n' + code +
+        (isP
+          ? '\n\n（萬一唔記得私人密碼,開咗個庫之後撳「👤 Abby\'s」,再撳「唔記得私人密碼」輸入呢串碼）\n' +
+            '⚠️ 呢串救唔到主庫,主庫嗰串係另一串。\n'
+          : '\n\n（萬一唔記得主密碼,喺個庫嘅登入版撳「唔記得主密碼」再輸入呢串碼）\n') +
         '請擺喺安全地方,唔好影相放上網。</pre>');
       w.document.close(); w.print();
     });
-    $('rClose').addEventListener('click', function(){ host.innerHTML=''; freshRecCode = null; });
+    $('rClose').addEventListener('click', function(){
+      host.innerHTML = '';
+      if(isP) freshPRecCode = null; else freshRecCode = null;
+    });
   }
 
   $('btnRecovery').addEventListener('click', function(){
