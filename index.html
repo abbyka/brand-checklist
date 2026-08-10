@@ -313,9 +313,9 @@
 
   <section class="todo-section" id="todoSection">
     <div class="todo-head">
-      <p class="eyebrow eyebrow-dark">CUSTOM · 自訂 To-Do List</p>
-      <h2 class="todo-title">兩個人嘅共用清單</h2>
-      <p class="todo-sub">自己打字加task,填deadline;過期會著色提你。撳死線pill隨時可以改日期。</p>
+      <p class="eyebrow eyebrow-dark" id="todoEyebrow">CUSTOM · 自訂 To-Do List</p>
+      <h2 class="todo-title" id="todoHeadTitle">兩個人嘅共用清單</h2>
+      <p class="todo-sub" id="todoHeadSub">自己打字加task,填deadline;過期會著色提你。撳死線pill隨時可以改日期。</p>
     </div>
     <div class="todo-filter-row" id="todoFilterRow">
       <button class="todo-filter-btn active" data-filter="all" type="button">全部</button>
@@ -564,9 +564,12 @@
     {id:'ai_marketing', name:'AI marketing'},
     // todoStyle = 唔要 158 項品牌檢查表,要共用清單 + 日子記錄嗰套
     {id:'todo_list', name:'To Do List', todoStyle:true},
-    {id:'subscription', name:'Subscription', todoStyle:true,
+    {id:'subscription', name:'Subscription', todoStyle:true, hideLifeLog:true,
      h1:'訂閱<br><span class="accent">記錄</span>',
-     sub:'Netflix、Adobe、ChatGPT、保險、月費…用「日子記錄」記低每個訂閱幾時扣錢,set 返每月 / 一年,到期會著色提你。'}
+     sub:'Netflix、Adobe、ChatGPT、保險、月費…打低每個訂閱幾時扣錢,填死線;過期會變色提你。撳死線pill隨時改日期。',
+     todoEyebrow:'MONEY · 訂閱',
+     todoTitle:'所有訂閱同扣錢日子',
+     todoSub:'一個訂閱一行,死線就填下次扣錢嗰日。扣咗就改返做下一期。'}
   ];
   function bizDef(id){
     return BUSINESSES.filter(function(x){ return x.id === id; })[0] || null;
@@ -1797,7 +1800,15 @@
     if(marketingOnlyEl) marketingOnlyEl.style.display = isTodoBiz ? 'none' : '';
     if(categoriesEl) categoriesEl.style.display = isTodoBiz ? 'none' : '';
     if(todoSectionEl) todoSectionEl.style.display = isTodoBiz ? '' : 'none';
-    if(lifeLogSectionEl) lifeLogSectionEl.style.display = isTodoBiz ? '' : 'none';
+    // 有啲 business(例如 Subscription)淨係要共用清單,唔要日子記錄
+    var wantLifeLog = isTodoBiz && !(def && def.hideLifeLog);
+    if(lifeLogSectionEl) lifeLogSectionEl.style.display = wantLifeLog ? '' : 'none';
+    var tEyebrow = document.getElementById('todoEyebrow');
+    var tTitle = document.getElementById('todoHeadTitle');
+    var tSub = document.getElementById('todoHeadSub');
+    if(tEyebrow) tEyebrow.textContent = (def && def.todoEyebrow) || 'CUSTOM · 自訂 To-Do List';
+    if(tTitle) tTitle.textContent = (def && def.todoTitle) || '兩個人嘅共用清單';
+    if(tSub) tSub.textContent = (def && def.todoSub) || '自己打字加task,填deadline;過期會著色提你。撳死線pill隨時可以改日期。';
     // business 自己有 h1 / sub 就用返佢自己嗰個
     if(h1El) h1El.innerHTML = (def && def.h1) || (isTodoBiz ? TODO_H1 : MARKETING_H1);
     if(subEl) subEl.innerHTML = (def && def.sub) || (isTodoBiz ? TODO_SUB : MARKETING_SUB);
