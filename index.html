@@ -562,8 +562,15 @@
     {id:'engineering', name:'工程'},
     {id:'finance', name:'財務'},
     {id:'ai_marketing', name:'AI marketing'},
-    {id:'todo_list', name:'To Do List'}
+    // todoStyle = 唔要 158 項品牌檢查表,要共用清單 + 日子記錄嗰套
+    {id:'todo_list', name:'To Do List', todoStyle:true},
+    {id:'subscription', name:'Subscription', todoStyle:true,
+     h1:'訂閱<br><span class="accent">記錄</span>',
+     sub:'Netflix、Adobe、ChatGPT、保險、月費…用「日子記錄」記低每個訂閱幾時扣錢,set 返每月 / 一年,到期會著色提你。'}
   ];
+  function bizDef(id){
+    return BUSINESSES.filter(function(x){ return x.id === id; })[0] || null;
+  }
 
   function getBusinessFromURL(){
     try{
@@ -1780,7 +1787,8 @@
   var TODO_SUB = '兩個人自己打字加task,填deadline;過期會變色提你(過期紅色、就快到期橙色)。';
 
   function updateViewForBusiness(id){
-    var isTodoBiz = (id === 'todo_list');
+    var def = bizDef(id);
+    var isTodoBiz = !!(def && def.todoStyle);
     var marketingOnlyEl = document.getElementById('marketingOnly');
     var todoSectionEl = document.getElementById('todoSection');
     var lifeLogSectionEl = document.getElementById('lifeLogSection');
@@ -1790,8 +1798,9 @@
     if(categoriesEl) categoriesEl.style.display = isTodoBiz ? 'none' : '';
     if(todoSectionEl) todoSectionEl.style.display = isTodoBiz ? '' : 'none';
     if(lifeLogSectionEl) lifeLogSectionEl.style.display = isTodoBiz ? '' : 'none';
-    if(h1El) h1El.innerHTML = isTodoBiz ? TODO_H1 : MARKETING_H1;
-    if(subEl) subEl.innerHTML = isTodoBiz ? TODO_SUB : MARKETING_SUB;
+    // business 自己有 h1 / sub 就用返佢自己嗰個
+    if(h1El) h1El.innerHTML = (def && def.h1) || (isTodoBiz ? TODO_H1 : MARKETING_H1);
+    if(subEl) subEl.innerHTML = (def && def.sub) || (isTodoBiz ? TODO_SUB : MARKETING_SUB);
   }
 
   function setBusiness(id){
